@@ -2,7 +2,6 @@
 
 import SwiftUI
 import SwiftData
-import Models
 
 struct AltarOfWhispersView: View {
     @Environment(\.modelContext) private var modelContext

@@ -1,6 +1,5 @@
 import SwiftUI
 import SwiftData
-import Models
 
 struct ShopView: View {
     @Bindable var user: User

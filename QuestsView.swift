@@ -1,6 +1,5 @@
 import SwiftUI
 import SwiftData
-import Models
 
 struct QuestsView: View {
     @Environment(\.modelContext) private var modelContext
