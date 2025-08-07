@@ -178,7 +178,7 @@ final class User {
     }
 
     @Relationship(deleteRule: .cascade, inverse: \Guild.owner) var guild: Guild?
-    @Relationship(inverse: \Team.members) var team: Team?
+    var team: Team?
     var guildSeals: Int = 0
     var teamPoints: Int = 0
 
