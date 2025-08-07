@@ -63,6 +63,7 @@ struct SanctuaryView: View {
                         QuestManager.shared.initializeQuests(for: user, context: modelContext)
                         GuildManager.shared.initializeGuild(for: user, context: modelContext)
                         GuildManager.shared.generateDailyBounties(for: user, context: modelContext)
+                        IdleGameManager.shared.processOfflineHunts(for: user, context: modelContext)
                     }
                 } else {
                     ContentUnavailableView("Loading...", systemImage: "hourglass")

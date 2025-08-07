@@ -44,8 +44,9 @@ struct ProjectChimeraApp: App {
                     PlantedTree.self,
                     GuildMember.self,
                     ActiveExpedition.self,
-                    AltarOfWhispers.self,
-                    WeeklyChallenge.self
+                                        AltarOfWhispers.self,
+                     WeeklyChallenge.self,
+                     ActiveHunt.self
                 ])
         }
     }

@@ -182,6 +182,7 @@ final class User {
     var guildSeals: Int = 0
     var teamPoints: Int = 0
     @Relationship(deleteRule: .cascade) var eggs: [HatchableEgg]? = []
+    @Relationship(deleteRule: .cascade) var activeHunts: [ActiveHunt]? = []
 
 
     init(username: String) {
@@ -199,6 +200,7 @@ final class User {
         self.team = nil
         self.guildSeals = 0
         self.teamPoints = 0
+        self.activeHunts = []
     }
 
     /// Some legacy code still expects a `name` property on `User`.
@@ -287,8 +289,9 @@ final class GuildBounty {
     var guildSealReward: Int
     var isActive: Bool
     var owner: User?
+    var targetEnemyID: String? // Optional target enemy for combat bounties
 
-    init(title: String, bountyDescription: String, requiredProgress: Int, guildXpReward: Int, guildSealReward: Int, owner: User?) { // Updated initializer
+    init(title: String, bountyDescription: String, requiredProgress: Int, guildXpReward: Int, guildSealReward: Int, owner: User?, targetEnemyID: String? = nil) { // Updated initializer
         self.id = UUID()
         self.title = title
         self.bountyDescription = bountyDescription
@@ -298,6 +301,7 @@ final class GuildBounty {
         self.guildSealReward = guildSealReward
         self.isActive = true
         self.owner = owner
+        self.targetEnemyID = targetEnemyID
     }
 }
 
@@ -457,7 +461,10 @@ final class PlantedTree {
 final class GuildMember {
     @Attribute(.unique) var id: UUID; var name: String; var role: Role; var level: Int
     var xp: Int; var isOnExpedition: Bool; var owner: User?
-    enum Role: String, Codable, CaseIterable { case forager = "Forager", gardener = "Gardener", alchemist = "Alchemist", seer = "Seer", blacksmith = "Blacksmith" }
+    enum Role: String, Codable, CaseIterable {
+        case forager = "Forager", gardener = "Gardener", alchemist = "Alchemist", seer = "Seer", blacksmith = "Blacksmith"
+        case knight = "Knight", archer = "Archer", wizard = "Wizard", rogue = "Rogue", cleric = "Cleric"
+    }
     init(name: String, role: Role, owner: User?) {
         self.id = UUID(); self.name = name; self.role = role; self.level = 1
         self.xp = 0; self.isOnExpedition = false; self.owner = owner
@@ -469,6 +476,11 @@ final class GuildMember {
         case .alchemist: return "Periodically transmutes materials or brews simple potions."
         case .seer: return "Boosts the Altar of Whispers' Echo generation."
         case .blacksmith: return "Specializes in crafting and enhancing equipment."
+        case .knight: return "Frontline fighter with steady damage and durability."
+        case .archer: return "Ranged attacker with high single-target damage."
+        case .wizard: return "Caster that deals bursty magic damage."
+        case .rogue: return "Swift strikes with occasional critical bursts."
+        case .cleric: return "Support that empowers the party's effectiveness."
         }
     }
     func effectDescription() -> String {
@@ -478,9 +490,26 @@ final class GuildMember {
         case .alchemist: return "Every hour, has a \(self.level * 2)% chance to create a potion."
         case .seer: return "Increases Echo generation by \(self.level * 10)%."
         case .blacksmith: return "Can craft materials or enhance equipped items."
+        case .knight: return "Contributes ~\(Int(combatDPS())) DPS to hunts."
+        case .archer: return "Contributes ~\(Int(combatDPS())) DPS to hunts."
+        case .wizard: return "Contributes ~\(Int(combatDPS())) DPS to hunts."
+        case .rogue: return "Contributes ~\(Int(combatDPS())) DPS to hunts."
+        case .cleric: return "Boosts party DPS in hunts by 10% per level."
         }
     }
     func upgradeCost() -> Int { 100 * Int(pow(2.0, Double(self.level))) }
+
+    func combatDPS() -> Double {
+        switch role {
+        case .knight: return 2.0 + Double(level) * 1.0
+        case .archer: return 2.5 + Double(level) * 1.2
+        case .wizard: return 1.5 + Double(level) * 1.6
+        case .rogue: return 2.2 + Double(level) * 1.3
+        case .cleric: return 0.5 + Double(level) * 0.5
+        default: return 0.0
+        }
+    }
+    var isCombatant: Bool { [.knight, .archer, .wizard, .rogue, .cleric].contains(role) }
 }
 
 @Model
@@ -493,9 +522,37 @@ final class ActiveExpedition {
     }
 }
 
+@Model
+final class ActiveHunt {
+    @Attribute(.unique) var id: UUID
+    var enemyID: String
+    var memberIDs: [UUID]
+    var killsAccumulated: Int
+    var lastUpdated: Date
+    var owner: User?
+
+    init(enemyID: String, memberIDs: [UUID], owner: User?) {
+        self.id = UUID()
+        self.enemyID = enemyID
+        self.memberIDs = memberIDs
+        self.killsAccumulated = 0
+        self.lastUpdated = Date()
+        self.owner = owner
+    }
+
+    var enemy: Enemy? { GameData.shared.getEnemy(id: enemyID) }
+}
+
 struct Expedition: Codable, Identifiable {
     var id: String; let name: String; let description: String; let duration: TimeInterval
     let minMembers: Int; let requiredRoles: [GuildMember.Role]?; let lootTable: [String: Int]; let xpReward: Int
+}
+
+struct Enemy: Codable, Identifiable {
+    var id: String
+    let name: String
+    let health: Double
+    let goldPerKill: Int
 }
 
 @Model
@@ -578,6 +635,7 @@ struct GameData {
     let recipes: [Recipe]
     let expeditions: [Expedition]
     let treasureChests: [TreasureChest]
+    let enemies: [Enemy]
 
     private init() {
         self.spells = [
@@ -610,5 +668,11 @@ struct GameData {
                 .currency(1000), .item(id: "item_relic_fragment", quantity: 1), .runes(20), .echoes(50.0)
             ], rewardCount: 3...5)
         ]
+        self.enemies = [
+            Enemy(id: "enemy_goblin", name: "Goblin", health: 12.0, goldPerKill: 2),
+            Enemy(id: "enemy_wolf", name: "Wolf", health: 20.0, goldPerKill: 3)
+        ]
     }
+
+    func getEnemy(id: String) -> Enemy? { enemies.first { $0.id == id } }
 }
