@@ -1,5 +1,8 @@
 import SwiftUI
 import SwiftData
+#if canImport(UIKit)
+import UIKit
+#endif
 
 // MARK: - Main Habit Garden View
 // FIXED: Added 'public' so this view can be accessed from SanctuaryView
@@ -198,23 +201,18 @@ struct PlantablePouchItemView: View {
                 
                 RewardDescriptionView(reward: item.harvestReward)
                 
-                Button("Plant") {
-                    SanctuaryManager.shared.plantItem(itemID: item.id, for: user, context: modelContext)
+                HStack {
+                    Button("Plant") {
+                        SanctuaryManager.shared.plantItem(itemID: item.id, for: user, context: modelContext)
+                    }
+                    .buttonStyle(.borderedProminent).tint(.green)
+                    
+                    Spacer()
+                    Text("Grow time: \(formattedGrowTime(item.growTime))")
+                        .font(.caption).foregroundColor(.secondary)
                 }
-                .buttonStyle(.bordered).tint(rarityColor(for: item.rarity))
-                .disabled(isGardenFull(for: item.plantableType) || inventoryItem.quantity <= 0)
-                .frame(maxWidth: .infinity)
             }
-            .padding().background(Material.thin).cornerRadius(10).padding(.horizontal)
-        }
-    }
-    
-    private func isGardenFull(for type: Item.PlantableType?) -> Bool {
-        switch type {
-        case .habitSeed: return (user.plantedHabitSeeds?.count ?? 0) >= 6
-        case .crop: return (user.plantedCrops?.count ?? 0) >= 8
-        case .treeSapling: return (user.plantedTrees?.count ?? 0) >= 3
-        default: return true
+            .padding().background(Material.regular).cornerRadius(15).padding(.horizontal)
         }
     }
     
@@ -225,73 +223,57 @@ struct PlantablePouchItemView: View {
         case .epic: return .purple
         }
     }
+    
+    private func formattedGrowTime(_ time: TimeInterval?) -> String {
+        guard let time = time else { return "N/A" }
+        let formatter = DateComponentsFormatter()
+        formatter.allowedUnits = [.hour, .minute]
+        formatter.unitsStyle = .short
+        return formatter.string(from: time) ?? "-"
+    }
 }
 
 struct RewardDescriptionView: View {
     let reward: Item.HarvestReward?
-    
     var body: some View {
-        HStack {
-            Text("Reward:").font(.caption).bold()
-            if let reward = reward {
-                switch reward {
-                case .currency(let amount):
-                    Text("\(amount) Gold").font(.caption).foregroundColor(.yellow)
-                case .item(let id, let quantity):
-                    if let item = ItemDatabase.shared.getItem(id: id) {
-                        Text("\(item.name) x\(quantity)").font(.caption).foregroundColor(.blue)
-                    }
-                case .experienceBurst(let skill, let amount):
-                    Text("+\(amount) \(skill.rawValue.capitalized) XP").font(.caption).foregroundColor(.purple)
-                }
-            } else {
-                Text("None").font(.caption).foregroundColor(.secondary)
-            }
+        switch reward {
+        case .currency(let amt): Text("Harvest yields \(amt) Gold").font(.caption).foregroundColor(.yellow)
+        case .item(let id, let qty): Text("Harvest yields x\(qty) \(ItemDatabase.shared.getItem(id: id)?.name ?? id)").font(.caption)
+        case .experienceBurst(let skill, let amt): Text("Harvest yields +\(amt) \(skill.rawValue.capitalized) XP").font(.caption)
+        case .none: EmptyView()
         }
     }
 }
 
-
-// MARK: - Other Sanctuary Views
-// FIXED: Added 'public' to these views as well
-public struct GuildHallView: View {
+struct GuildHallView: View {
     @Environment(\.modelContext) private var modelContext
     @Bindable var user: User
     
-    private var availableRoles: [GuildMember.Role] {
-        let hiredRoles = Set(user.guildMembers?.map { $0.role } ?? [])
-        return GuildMember.Role.allCases.filter { !hiredRoles.contains($0) }
-    }
-
-    public var body: some View {
+    var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                if let guild = user.guild {
-                    GuildProgressionView(guild: guild)
-                }
-
+                Text("Guild Hall").font(.largeTitle).bold().padding(.horizontal)
+                
                 Section {
-                    if user.guildMembers?.isEmpty ?? true {
-                        ContentUnavailableView("Guild is Empty", systemImage: "person.3.slash", description: Text("Hire members from the list below."))
+                    Text("Your Guild Members").font(.title2).bold().padding(.horizontal)
+                    if (user.guildMembers ?? []).isEmpty {
+                        Text("No members yet. Hire someone from the Guild Master!")
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal)
                     } else {
                         ForEach(user.guildMembers ?? []) { member in
-                            GuildMemberCardView(member: member, user: user)
+                            GuildMemberRowView(member: member, user: user)
                         }
                     }
-                } header: {
-                    Text("Your Guild").font(.title2).bold().padding(.horizontal)
                 }
                 
                 Section {
-                    if availableRoles.isEmpty {
-                         Text("All available roles have been hired.").font(.caption).foregroundColor(.secondary).padding()
-                    } else {
-                        ForEach(availableRoles, id: \.self) { role in
+                    Text("Hire More").font(.title2).bold().padding(.horizontal)
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 220), spacing: 16)], spacing: 16) {
+                        ForEach(GuildMember.Role.allCases, id: \.self) { role in
                             HireableMemberCardView(role: role, user: user)
                         }
-                    }
-                } header: {
-                    Text("Available for Hire").font(.title2).bold().padding(.horizontal)
+                    }.padding(.top, 8)
                 }
             }
             .padding(.vertical)
@@ -300,66 +282,21 @@ public struct GuildHallView: View {
     }
 }
 
-public struct ExpeditionBoardView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Bindable var user: User
-    
-    @State private var showLaunchSheetFor: Expedition?
-    
-    public var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                
-                Section {
-                    if user.activeExpeditions?.isEmpty ?? true {
-                        Text("No expeditions in progress.").font(.caption).foregroundColor(.secondary).padding()
-                    } else {
-                        ForEach(user.activeExpeditions ?? []) { activeExpedition in
-                            ActiveExpeditionCardView(activeExpedition: activeExpedition)
-                        }
-                    }
-                } header: {
-                    Text("In Progress").font(.title2).bold().padding(.horizontal)
-                }
-                
-                Section {
-                    ForEach(ItemDatabase.shared.getAllExpeditions()) { expedition in
-                        ExpeditionCardView(expedition: expedition, onPrepare: {
-                            showLaunchSheetFor = expedition
-                        })
-                    }
-                } header: {
-                    Text("Available Expeditions").font(.title2).bold().padding(.horizontal)
-                }
-            }
-            .padding(.vertical)
-        }
-        .navigationTitle("Expedition Board")
-        .sheet(item: $showLaunchSheetFor) { expedition in
-            ExpeditionLaunchView(expedition: expedition, user: user)
-        }
-        .onAppear {
-            GuildManager.shared.checkCompletedExpeditions(for: user, context: modelContext)
-        }
-    }
-}
-
-// MARK: - Subviews for Guild & Expedition
-struct GuildMemberCardView: View {
+struct GuildMemberRowView: View {
     @Environment(\.modelContext) private var modelContext
     @Bindable var member: GuildMember
     @Bindable var user: User
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text(member.name).font(.headline.bold())
-                Text("(\(member.role.rawValue))").font(.headline).foregroundColor(.secondary)
+                Image(systemName: "person.fill.badge.plus")
+                Text("\(member.name) • \(member.role.rawValue) • Lv \(member.level)").bold()
                 Spacer()
-                Text("Lvl \(member.level)").font(.headline.bold())
+                Text("Gold: \(user.gold)").font(.caption).foregroundColor(.yellow)
             }
             
-            Text(member.effectDescription()).font(.caption).italic()
+            Text(member.roleDescription()).font(.caption).italic()
             
             ProgressView(value: Double(member.xp % 100), total: 100)
                 .padding(.vertical, 4)
@@ -396,7 +333,16 @@ struct HireableMemberCardView: View {
             Text(tempMember.roleDescription).font(.caption).italic().foregroundColor(.secondary)
             
             Button("Hire (\(cost) G)") {
-                GuildManager.shared.hireGuildMember(role: role, for: user, context: modelContext)
+                let success = GuildManager.shared.hireGuildMember(role: role, for: user, context: modelContext)
+                if success {
+                    #if canImport(UIKit)
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    #endif
+                } else {
+                    #if canImport(UIKit)
+                    UINotificationFeedbackGenerator().notificationOccurred(.warning)
+                    #endif
+                }
             }
             .buttonStyle(.borderedProminent).tint(.green)
             .disabled(user.gold < cost)
@@ -428,80 +374,26 @@ struct ActiveExpeditionCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if let expedition = activeExpedition.expedition {
-                Text(expedition.name).font(.headline.bold())
-                let progress = max(0, now.timeIntervalSince(activeExpedition.startTime)) / expedition.duration
-                ProgressView(value: progress)
-                Text("Returning in: \(timeRemaining(until: activeExpedition.endTime))")
-                    .font(.caption)
-            }
+            Text(activeExpedition.expedition?.name ?? "Expedition").font(.headline.bold())
+            Text("Ends in \(timeRemaining(until: activeExpedition.endTime))").font(.caption).foregroundColor(.secondary)
+            ProgressView(value: progress)
         }
         .padding().background(Material.regular).cornerRadius(15).padding(.horizontal)
-        .onReceive(timer) { newDate in self.now = newDate }
+        .onReceive(timer) { _ in }
+    }
+    
+    private var progress: Double {
+        let total = activeExpedition.expedition?.duration ?? 1
+        let elapsed = Date().timeIntervalSince(activeExpedition.startTime)
+        return min(max(elapsed / total, 0), 1)
     }
     
     private func timeRemaining(until date: Date) -> String {
-        let remaining = date.timeIntervalSince(now)
-        if remaining <= 0 { return "Any moment now..." }
+        let remaining = date.timeIntervalSince(Date())
+        if remaining <= 0 { return "Done" }
         let formatter = DateComponentsFormatter()
         formatter.allowedUnits = [.hour, .minute, .second]
         formatter.unitsStyle = .abbreviated
         return formatter.string(from: remaining) ?? "..."
-    }
-}
-
-struct ExpeditionLaunchView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Environment(\.dismiss) private var dismiss
-    
-    let expedition: Expedition
-    @Bindable var user: User
-    
-    @State private var selectedMemberIDs = Set<UUID>()
-    
-    var body: some View {
-        NavigationView {
-            VStack(alignment: .leading, spacing: 20) {
-                Text(expedition.name).font(.largeTitle.bold())
-                
-                let availableMembers = user.guildMembers?.filter { !$0.isOnExpedition } ?? []
-                
-                List(availableMembers) { member in
-                    Button(action: { toggleSelection(member.id) }) {
-                        HStack {
-                            Image(systemName: selectedMemberIDs.contains(member.id) ? "checkmark.circle.fill" : "circle")
-                            Text("\(member.name) (Lvl \(member.level) \(member.role.rawValue))")
-                        }
-                    }
-                }
-                
-                Button("Launch Expedition") {
-                    GuildManager.shared.launchExpedition(expeditionID: expedition.id, with: Array(selectedMemberIDs), for: user, context: modelContext)
-                    dismiss()
-                }
-                .buttonStyle(JuicyButtonStyle())
-                .disabled(!isPartyValid())
-            }
-            .padding()
-            .navigationTitle("Form Party")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-            }
-        }
-    }
-    
-    private func toggleSelection(_ id: UUID) {
-        if selectedMemberIDs.contains(id) {
-            selectedMemberIDs.remove(id)
-        } else {
-            selectedMemberIDs.insert(id)
-        }
-    }
-    
-    private func isPartyValid() -> Bool {
-        return selectedMemberIDs.count >= expedition.minMembers
     }
 }

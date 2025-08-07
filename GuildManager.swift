@@ -13,13 +13,15 @@ final class GuildManager: ObservableObject {
         user.guild = newGuild
     }
 
-    func hireGuildMember(role: GuildMember.Role, for user: User, context: ModelContext) {
+    @discardableResult
+    func hireGuildMember(role: GuildMember.Role, for user: User, context: ModelContext) -> Bool {
         let hireCost = 250
-        guard user.gold >= hireCost else { return }
+        guard user.gold >= hireCost else { return false }
         
         user.gold -= hireCost
         let newMember = GuildMember(name: "New \(role.rawValue)", role: role, owner: user)
         user.guildMembers?.append(newMember)
+        return true
     }
     
     func upgradeGuildMember(member: GuildMember, user: User, context: ModelContext) {
@@ -193,6 +195,10 @@ final class GuildManager: ObservableObject {
                     for bounty in bounties where bounty.isActive {
                         if let target = bounty.targetEnemyID, target == enemy.id {
                             bounty.currentProgress = min(bounty.requiredProgress, bounty.currentProgress + kills)
+                            // Auto-complete combat bounties when requirements are met
+                            if bounty.currentProgress >= bounty.requiredProgress {
+                                completeBounty(bounty: bounty, for: user)
+                            }
                         }
                     }
                 }
