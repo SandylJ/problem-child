@@ -1,33 +1,30 @@
 import SwiftUI
-import SwiftData
 
 @main
 struct ProjectChimeraApp: App {
-    // This sets up the SwiftData database for the entire application.
-    // The container holds all the models we defined in Models.swift.
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            User.self,
-            Chimera.self,
-            Task.self,
-            SubTask.self,
-            JournalEntry.self,
-            WeeklyChallenge.self // Included for future phases
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
+    // CORRECTED: Create a separate @StateObject for each manager.
+    // This ensures each manager's lifecycle is correctly managed by SwiftUI
+    // and resolves the access level issues by initializing them here.
+    @StateObject private var gameManager = IdleGameManager()
+    @StateObject private var healthKitManager = HealthKitManager()
+    @StateObject private var onboardingManager = OnboardingManager()
+    @StateObject private var equipmentManager = EquipmentManager()
+    @StateObject private var sanctuaryManager = SanctuaryManager()
+    @StateObject private var guildManager = GuildManager()
+    @StateObject private var shopManager = ShopManager()
 
     var body: some Scene {
         WindowGroup {
-            MainView()
+            // CORRECTED: Inject each manager individually into the environment.
+            // This is the standard SwiftUI pattern for providing dependencies to child views.
+            ContentView()
+                .environmentObject(gameManager)
+                .environmentObject(healthKitManager)
+                .environmentObject(onboardingManager)
+                .environmentObject(equipmentManager)
+                .environmentObject(sanctuaryManager)
+                .environmentObject(guildManager)
+                .environmentObject(shopManager)
         }
-        // The .modelContainer modifier makes the database available to all child views.
-        .modelContainer(sharedModelContainer)
     }
 }
