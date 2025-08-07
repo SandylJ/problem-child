@@ -1,6 +1,8 @@
 import SwiftUI
 import SwiftData
+#if canImport(Vortex)
 import Vortex
+#endif
 
 struct TaskItem: Identifiable, Equatable {
     var id = UUID(); let name: String; let xp: Int; let category: SkillCategory; var isCompleted: Bool = false
@@ -247,10 +249,12 @@ struct CharacterHeaderView: View {
         VStack {
             ZStack {
                 if let chimera = user.chimera { ChimeraView(chimera: chimera).padding(.vertical) }
+                #if canImport(Vortex)
                 if didEvolve {
                     VortexView(.magic) { Circle().fill(.white).frame(width: 16).blendMode(.plusLighter).tag("circle") }
-                    .onAppear { DispatchQueue.main.asyncAfter(deadline: .now() + 2) { didEvolve = false } }
+                        .onAppear { DispatchQueue.main.asyncAfter(deadline: .now() + 2) { didEvolve = false } }
                 }
+                #endif
             }
         }
     }

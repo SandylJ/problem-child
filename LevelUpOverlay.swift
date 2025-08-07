@@ -1,5 +1,7 @@
 import SwiftUI
+#if canImport(Vortex)
 import Vortex
+#endif
 
 // This view displays a celebratory confetti effect.
 struct LevelUpOverlay: View {
@@ -8,6 +10,7 @@ struct LevelUpOverlay: View {
     var body: some View {
         ZStack {
             if didLevelUp {
+                #if canImport(Vortex)
                 VortexViewReader { proxy in
                     VortexView(.confetti) {
                         Rectangle()
@@ -30,6 +33,18 @@ struct LevelUpOverlay: View {
                 }
                 .ignoresSafeArea()
                 .allowsHitTesting(false) // Allows taps to go through the overlay
+                #else
+                // Fallback: simple overlay without Vortex
+                Text("Level Up!")
+                    .font(.largeTitle.bold())
+                    .padding(24)
+                    .background(.ultraThinMaterial, in: Capsule())
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            didLevelUp = false
+                        }
+                    }
+                #endif
             }
         }
     }

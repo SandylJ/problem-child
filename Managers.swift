@@ -108,6 +108,36 @@ final class SpellbookManager {
     }
 }
 
+// MARK: - Spell Effect Presentation Helpers
+extension SpellEffect {
+    var displayName: String {
+        switch self {
+        case .doubleXP: return "Double XP"
+        case .doubleGold: return "Double Gold"
+        case .xpBoost(let stat, let multiplier): return "+\(Int(multiplier * 100))% \(stat.rawValue.capitalized) XP"
+        case .goldBoost(let multiplier): return "+\(Int(multiplier * 100))% Gold"
+        case .runeBoost(let multiplier): return "+\(Int(multiplier * 100))% Runes"
+        case .willpowerGeneration(let amount): return "+\(amount) Willpower/min"
+        case .reducedUpgradeCost(let percentage): return "-\(Int(percentage * 100))% Upgrade Cost"
+        case .guildXpBoost(let multiplier): return "+\(Int(multiplier * 100))% Guild XP"
+        case .plantGrowthSpeed(let multiplier): return "+\(Int(multiplier * 100))% Plant Growth"
+        }
+    }
+    var systemImage: String {
+        switch self {
+        case .doubleXP: return "sparkles"
+        case .doubleGold: return "dollarsign.circle.fill"
+        case .xpBoost: return "brain.head.profile"
+        case .goldBoost: return "creditcard.circle.fill"
+        case .runeBoost: return "circle.hexagonpath.fill"
+        case .willpowerGeneration: return "bolt.heart.fill"
+        case .reducedUpgradeCost: return "arrow.down.circle.fill"
+        case .guildXpBoost: return "person.3.fill"
+        case .plantGrowthSpeed: return "leaf.fill"
+        }
+    }
+}
+
 
 // MARK: - Obsidian Gymnasium Manager
 
