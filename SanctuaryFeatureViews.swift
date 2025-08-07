@@ -296,7 +296,7 @@ struct GuildMemberRowView: View {
                 Text("Gold: \(user.gold)").font(.caption).foregroundColor(.yellow)
             }
             
-            Text(member.roleDescription()).font(.caption).italic()
+            Text(member.roleDescription).font(.caption).italic()
             
             ProgressView(value: Double(member.xp % 100), total: 100)
                 .padding(.vertical, 4)

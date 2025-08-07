@@ -40,9 +40,7 @@ struct SanctuaryView: View {
                             NavigationLink(destination: GuildHallView(user: user)) {
                                 Label("Guild Hall", systemImage: "person.3.fill")
                             }
-                            NavigationLink(destination: ExpeditionBoardView(user: user)) {
-                                Label("Expedition Board", systemImage: "map.fill")
-                            }
+                            
                             NavigationLink(destination: ObsidianGymnasiumView(user: user)) {
                                 Label("Obsidian Gymnasium", systemImage: "figure.strengthtraining.traditional")
                             }
