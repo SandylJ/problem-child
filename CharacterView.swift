@@ -1,6 +1,5 @@
 import SwiftUI
 import SwiftData
-import Models
 import Vortex
 
 struct TaskItem: Identifiable, Equatable {

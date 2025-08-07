@@ -1,6 +1,5 @@
 import SwiftUI
 import SwiftData
-import Models
 
 struct SpellbookView: View {
     @Bindable var user: User

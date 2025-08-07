@@ -1,6 +1,5 @@
 import SwiftUI
 import SwiftData
-import Models
 
 struct TaskListView: View {
     @Environment(\.modelContext) private var modelContext

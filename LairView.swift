@@ -1,6 +1,5 @@
 import SwiftUI
 import SwiftData
-import Models
 
 struct LairView: View {
     @Query private var users: [User]
