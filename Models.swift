@@ -54,7 +54,15 @@ enum LootReward: Codable, Hashable, Identifiable {
 }
 
 enum SpellEffect: Codable, Hashable {
-    case doubleXP, doubleGold
+    case doubleXP
+    case doubleGold
+    case xpBoost(ChimeraStat, Double)
+    case goldBoost(Double)
+    case runeBoost(Double)
+    case willpowerGeneration(Int)
+    case reducedUpgradeCost(Double)
+    case guildXpBoost(Double)
+    case plantGrowthSpeed(Double)
 }
 
 struct Spell: Codable, Hashable, Identifiable {
@@ -63,6 +71,7 @@ struct Spell: Codable, Hashable, Identifiable {
 
 struct Recipe: Codable, Hashable, Identifiable {
     var id: String
+    let name: String
     let craftedItemID: String
     let requiredMaterials: [String: Int]
     let requiredGold: Int
@@ -308,6 +317,9 @@ final class Task {
         self.isCompleted = false; self.completionDate = nil; self.difficulty = difficulty; self.associatedStat = associatedStat
     }
 }
+
+// Legacy type alias for older code paths
+typealias UserTask = Task
 
 @Model
 final class SubTask {
