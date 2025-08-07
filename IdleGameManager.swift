@@ -4,7 +4,7 @@ import SwiftData
 
 // MARK: - Altar of Whispers Manager
 
-final class IdleGameManager {
+final class IdleGameManager: ObservableObject {
     static let shared = IdleGameManager()
     private init() {}
 

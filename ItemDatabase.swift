@@ -15,6 +15,9 @@ final class ItemDatabase {
         items[id]
     }
 
+    /// Convenience helpers used by various views
+    func getAllPlantables() -> [Item] { items.values.filter { $0.itemType == .plantable } }
+
     // MARK: - Spells
     var masterSpellList: [Spell] = [
         Spell(
@@ -37,6 +40,12 @@ final class ItemDatabase {
 
     // MARK: - Recipes
     var masterRecipeList: [Recipe] = []
+    // MARK: - Chests
+    var masterChestList: [TreasureChest] = []
+    // MARK: - Expeditions
+    private var expeditions: [Expedition] = []
+    func getAllExpeditions() -> [Expedition] { expeditions }
+    func getExpedition(id: String) -> Expedition? { expeditions.first { $0.id == id } }
 
     // MARK: - Quest Templates
     struct QuestTemplate {

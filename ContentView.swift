@@ -9,20 +9,16 @@ struct ContentView: View {
 
     var body: some View {
         Group {
-            // The view correctly checks the onboarding status.
-            if onboardingManager.showOnboarding {
-                // OnboardingView will automatically receive the onboardingManager
-                // from the environment. No need to inject it again.
+            // Show onboarding until the user completes it.
+            if !onboardingManager.hasCompletedOnboarding {
                 OnboardingView()
             } else {
-                // MainView and its children will also receive all the managers
-                // from the environment.
                 MainView()
             }
         }
         .onAppear {
-            // You can safely call managers here.
-            healthKitManager.requestAuthorization()
+            // HealthKit authorization requires a completion handler.
+            healthKitManager.requestAuthorization { _ in }
         }
     }
 }
