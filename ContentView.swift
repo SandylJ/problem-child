@@ -9,8 +9,8 @@ struct ContentView: View {
     @EnvironmentObject var onboardingManager: OnboardingManager
 
     @Query(filter: #Predicate<UserTask> { task in
-        task.difficulty == TaskDifficulty.easy &&
-            task.associatedStat == ChimeraStat.intellect
+        task.difficulty == .easy &&
+            task.associatedStat == .intellect
     }) var tasks: [UserTask]
 
     var body: some View {
