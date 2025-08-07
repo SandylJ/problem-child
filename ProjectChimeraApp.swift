@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 @main
 struct ProjectChimeraApp: App {
@@ -25,6 +26,27 @@ struct ProjectChimeraApp: App {
                 .environmentObject(sanctuaryManager)
                 .environmentObject(guildManager)
                 .environmentObject(shopManager)
+                .modelContainer(for: [
+                    User.self,
+                    Task.self,
+                    JournalEntry.self,
+                    Guild.self,
+                    Team.self,
+                    GuildBounty.self,
+                    Achievement.self,
+                    Quest.self,
+                    Statue.self,
+                    Chimera.self,
+                    SubTask.self,
+                    InventoryItem.self,
+                    PlantedHabitSeed.self,
+                    PlantedCrop.self,
+                    PlantedTree.self,
+                    GuildMember.self,
+                    ActiveExpedition.self,
+                    AltarOfWhispers.self,
+                    WeeklyChallenge.self
+                ])
         }
     }
 }
