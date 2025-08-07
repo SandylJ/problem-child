@@ -12,7 +12,7 @@ final class ShopManager: ObservableObject {
             return (user.inventory?.first(where: { $0.itemID == keyID })?.quantity ?? 0) > 0
         } else {
             // Check for currency
-            return user.currency >= chest.cost
+            return user.gold >= chest.cost
         }
     }
 
@@ -29,7 +29,7 @@ final class ShopManager: ObservableObject {
                 }
             }
         } else {
-            user.currency -= chest.cost
+            user.gold -= chest.cost
         }
 
         // 2. Generate and grant loot
@@ -44,10 +44,11 @@ final class ShopManager: ObservableObject {
     }
     
     // This is the same grantLoot function from QuestManager, centralized for reuse.
+    // Unified with IdleGameManager.grantLoot semantics, but kept local to avoid cross-dependencies
     private func grantLoot(_ loot: LootReward, to user: User, context: ModelContext) {
         switch loot {
         case .currency(let amount):
-            user.currency += amount
+            user.gold += amount
         case .item(let id, let quantity):
             if let inventoryItem = user.inventory?.first(where: { $0.itemID == id }) {
                 inventoryItem.quantity += quantity

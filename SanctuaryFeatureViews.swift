@@ -371,7 +371,7 @@ struct GuildMemberCardView: View {
                     GuildManager.shared.upgradeGuildMember(member: member, user: user, context: modelContext)
                 }
                 .buttonStyle(.bordered).tint(.blue)
-                .disabled(user.currency < member.upgradeCost())
+                .disabled(user.gold < member.upgradeCost())
             }
         }
         .padding().background(Material.regular).cornerRadius(15).padding(.horizontal)
@@ -388,14 +388,18 @@ struct HireableMemberCardView: View {
         let tempMember = GuildMember(name: "", role: role, owner: nil)
         
         VStack(alignment: .leading, spacing: 12) {
-            Text("Hire a \(role.rawValue)").font(.headline.bold())
+            HStack {
+                Text("Hire a \(role.rawValue)").font(.headline.bold())
+                Spacer()
+                Text("Gold: \(user.gold)").font(.caption).foregroundColor(.yellow)
+            }
             Text(tempMember.roleDescription).font(.caption).italic().foregroundColor(.secondary)
             
             Button("Hire (\(cost) G)") {
                 GuildManager.shared.hireGuildMember(role: role, for: user, context: modelContext)
             }
             .buttonStyle(.borderedProminent).tint(.green)
-            .disabled(user.currency < cost)
+            .disabled(user.gold < cost)
         }
         .padding().background(Material.regular).cornerRadius(15).padding(.horizontal)
     }

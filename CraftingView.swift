@@ -12,7 +12,7 @@ struct CraftingView: View {
             VStack(alignment: .leading, spacing: 24) {
                 
                 // Header
-                Text("Gold: \(user.currency) 🪙")
+                Text("Gold: \(user.gold) 🪙")
                     .font(.title2.bold())
                     .padding([.horizontal, .top])
                 
@@ -76,8 +76,8 @@ struct RecipeCardView: View {
             HStack {
                 Text("- Gold:")
                 Spacer()
-                Text("\(user.currency) / \(recipe.requiredGold)")
-                    .foregroundColor(user.currency >= recipe.requiredGold ? .primary : .red)
+                Text("\(user.gold) / \(recipe.requiredGold)")
+                    .foregroundColor(user.gold >= recipe.requiredGold ? .primary : .red)
             }
             .font(.caption)
             

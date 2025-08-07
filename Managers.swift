@@ -12,7 +12,7 @@ final class CraftingManager {
 
     /// Checks if a user has the required materials and gold to craft a recipe.
     func canCraft(_ recipe: Recipe, user: User) -> Bool {
-        guard user.currency >= recipe.requiredGold else { return false }
+        guard user.gold >= recipe.requiredGold else { return false }
         
         for (itemID, requiredQuantity) in recipe.requiredMaterials {
             let userQuantity = user.inventory?.first(where: { $0.itemID == itemID })?.quantity ?? 0
@@ -28,7 +28,7 @@ final class CraftingManager {
         guard canCraft(recipe, user: user) else { return }
 
         // 1. Deduct gold
-        user.currency -= recipe.requiredGold
+        user.gold -= recipe.requiredGold
 
         // 2. Deduct materials
         for (itemID, requiredQuantity) in recipe.requiredMaterials {
@@ -290,7 +290,7 @@ final class GameLogicManager {
     private func checkForLevelUp(user: User) -> Bool {
         let xpForNextLevel = xpRequired(for: user.level + 1)
         if user.totalXP >= xpForNextLevel {
-            user.level += 1; user.currency += 100; 
+            user.level += 1; user.gold += 100; 
         // Apply rune boost from spells
         var runesGained = 1
         for (effect, _) in user.activeBuffs {

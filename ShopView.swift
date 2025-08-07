@@ -14,7 +14,7 @@ struct ShopView: View {
             VStack(alignment: .leading, spacing: 24) {
                 
                 // Header
-                Text("Gold: \(user.currency) 🪙")
+                Text("Gold: \(user.gold) 🪙")
                     .font(.title2.bold())
                     .padding([.horizontal, .top])
                 

@@ -33,7 +33,7 @@ struct GuildMasterView: View {
                 .padding(.horizontal)
 
                 Section(header: Text("Active Hunts").font(.title2).bold()) {
-                    HuntsSection(user: user, modelContext: modelContext)
+                    PassiveHuntsSection(user: user, modelContext: modelContext)
                 }
                 .padding(.horizontal)
 
@@ -150,79 +150,83 @@ struct HireMercenariesRow: View {
     }
 }
 
-struct HuntsSection: View {
+struct PassiveHuntsSection: View {
     @Bindable var user: User
     var modelContext: ModelContext
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Start a goblin hunt quick action
-            Button {
-                let combatantIDs = (user.guildMembers ?? []).filter { $0.isCombatant }.map { $0.id }
-                guard !combatantIDs.isEmpty else { return }
-                GuildManager.shared.startHunt(enemyID: "enemy_goblin", with: combatantIDs, for: user, context: modelContext)
-            } label: {
-                Label("Start Goblin Hunt (auto-assign all combatants)", systemImage: "scope")
+            HStack {
+                Text("Hunt Rewards ready: \(user.unclaimedHuntGold) Gold").font(.headline)
+                Spacer()
+                Button("Claim") {
+                    GuildManager.shared.claimHuntRewards(for: user)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.yellow)
+                .disabled(user.unclaimedHuntGold <= 0)
             }
-            .buttonStyle(.borderedProminent)
 
-            if (user.activeHunts ?? []).isEmpty {
-                Text("No active hunts. Start one to earn passive gold and complete combat bounties.")
+            // Kill Tally
+            if user.huntKillTally.isEmpty {
+                Text("No kills yet. Start a hunt to begin accumulating rewards.")
                     .font(.caption)
                     .foregroundColor(.secondary)
             } else {
-                ForEach(user.activeHunts ?? []) { hunt in
-                    HuntRowView(hunt: hunt, user: user, modelContext: modelContext)
+                VStack(alignment: .leading, spacing: 6) {
+                    ForEach(Array(user.huntKillTally.keys).sorted(), id: \.self) { enemyID in
+                        if let enemy = GameData.shared.getEnemy(id: enemyID) {
+                            HStack {
+                                Text(enemy.name)
+                                Spacer()
+                                Text("\(user.huntKillTally[enemyID] ?? 0) kills")
+                                    .foregroundColor(.secondary)
+                            }
+                            .font(.caption)
+                        }
+                    }
                 }
+                .padding(.vertical, 4)
+            }
+
+            Divider().padding(.vertical, 4)
+
+            // Minimal controls for starting/stopping hunts
+            HStack {
+                Button {
+                    let combatantIDs = (user.guildMembers ?? []).filter { $0.isCombatant }.map { $0.id }
+                    guard !combatantIDs.isEmpty else { return }
+                    GuildManager.shared.startHunt(enemyID: "enemy_goblin", with: combatantIDs, for: user, context: modelContext)
+                } label: { Label("Goblin", systemImage: "scope") }
+                .buttonStyle(.bordered)
+
+                Button {
+                    let combatantIDs = (user.guildMembers ?? []).filter { $0.isCombatant }.map { $0.id }
+                    guard !combatantIDs.isEmpty else { return }
+                    GuildManager.shared.startHunt(enemyID: "enemy_zombie", with: combatantIDs, for: user, context: modelContext)
+                } label: { Label("Zombie", systemImage: "scope") }
+                .buttonStyle(.bordered)
+
+                Button {
+                    let combatantIDs = (user.guildMembers ?? []).filter { $0.isCombatant }.map { $0.id }
+                    guard !combatantIDs.isEmpty else { return }
+                    GuildManager.shared.startHunt(enemyID: "enemy_spider", with: combatantIDs, for: user, context: modelContext)
+                } label: { Label("Spider", systemImage: "scope") }
+                .buttonStyle(.bordered)
+
+                Spacer()
+
+                Button {
+                    if let first = user.activeHunts?.first {
+                        GuildManager.shared.stopHunt(first, for: user, context: modelContext)
+                    }
+                } label: { Label("Stop", systemImage: "xmark.circle") }
+                .buttonStyle(.bordered)
+                .disabled((user.activeHunts ?? []).isEmpty)
             }
         }
         .padding()
         .background(Material.regular)
-        .cornerRadius(10)
-    }
-}
-
-struct HuntRowView: View {
-    @Bindable var hunt: ActiveHunt
-    @Bindable var user: User
-    var modelContext: ModelContext
-
-    private func dpsText() -> String {
-        let dps = GuildManager.shared.totalPartyDPS(memberIDs: hunt.memberIDs, on: user)
-        return String(format: "%.1f DPS", dps)
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(hunt.enemy?.name ?? "Unknown Enemy").bold()
-                Spacer()
-                Text(dpsText()).font(.caption).foregroundColor(.secondary)
-            }
-            Text("Kills: \(hunt.killsAccumulated)").font(.caption)
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 6) {
-                    ForEach(hunt.memberIDs, id: \.self) { id in
-                        if let member = user.guildMembers?.first(where: { $0.id == id }) {
-                            Text(member.name)
-                                .font(.caption2)
-                                .padding(6)
-                                .background(Color.blue.opacity(0.1))
-                                .cornerRadius(6)
-                        }
-                    }
-                }
-            }
-            HStack {
-                Button("Stop Hunt") {
-                    GuildManager.shared.stopHunt(hunt, for: user, context: modelContext)
-                }
-                .buttonStyle(.bordered)
-                Spacer()
-            }
-        }
-        .padding()
-        .background(Material.thin)
         .cornerRadius(10)
     }
 }

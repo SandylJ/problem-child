@@ -110,7 +110,7 @@ struct CharacterView: View {
                 var goldAmount = Int.random(in: 10...50)
                 // Apply double gold buff if active
                 if user.activeBuffs.keys.contains(.doubleGold) { goldAmount *= 2 }
-                user.currency += goldAmount
+                user.gold += goldAmount
                 lastGoldAmount = goldAmount; showGoldPop = true
             }
             if Double.random(in: 0...1) < 0.1 {
@@ -136,7 +136,7 @@ struct CharacterView: View {
     }
     
     private func beginNewDay(for user: User) {
-        user.currency += 100
+        user.gold += 100
         dailyTasks = Self.generateNewDailyTasks()
     }
 

@@ -28,7 +28,7 @@ final class IdleGameManager: ObservableObject {
         altar.echoes += echoesEarned
 
         let goldEarned = altar.goldPerSecond * timeOffline
-        user.currency += Int(goldEarned)
+        user.gold += Int(goldEarned)
 
         let runesEarned = altar.runesPerSecond * timeOffline
         user.runes += Int(runesEarned)
@@ -91,7 +91,7 @@ final class IdleGameManager: ObservableObject {
     func grantLoot(_ loot: LootReward, to user: User, context: ModelContext) {
         switch loot {
         case .currency(let amount):
-            user.currency += amount
+            user.gold += amount
         case .item(let id, let quantity):
             if let invItem = user.inventory?.first(where: { $0.itemID == id }) {
                 invItem.quantity += quantity

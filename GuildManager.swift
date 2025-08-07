@@ -15,18 +15,18 @@ final class GuildManager: ObservableObject {
 
     func hireGuildMember(role: GuildMember.Role, for user: User, context: ModelContext) {
         let hireCost = 250
-        guard user.currency >= hireCost else { return }
+        guard user.gold >= hireCost else { return }
         
-        user.currency -= hireCost
+        user.gold -= hireCost
         let newMember = GuildMember(name: "New \(role.rawValue)", role: role, owner: user)
         user.guildMembers?.append(newMember)
     }
     
     func upgradeGuildMember(member: GuildMember, user: User, context: ModelContext) {
         let cost = member.upgradeCost()
-        guard user.currency >= cost else { return }
+        guard user.gold >= cost else { return }
         
-        user.currency -= cost
+        user.gold -= cost
         member.level += 1
     }
     
@@ -46,7 +46,7 @@ final class GuildManager: ObservableObject {
         
         for expedition in completedExpeditions {
             user.totalXP += expedition.expedition?.xpReward ?? 0
-            user.currency += 100
+            user.gold += 100
             
             expedition.memberIDs.forEach { id in
                 user.guildMembers?.first(where: { $0.id == id })?.isOnExpedition = false
@@ -184,7 +184,10 @@ final class GuildManager: ObservableObject {
             if kills > 0 {
                 hunt.killsAccumulated += kills
                 let goldEarned = Int(Double(enemy.goldPerKill * kills) * goldBoostMultiplier)
-                user.currency += goldEarned
+                user.unclaimedHuntGold += goldEarned
+                var tally = user.huntKillTally
+                tally[enemy.id, default: 0] += kills
+                user.huntKillTally = tally
                 // Progress any matching combat bounties
                 if let bounties = user.guildBounties {
                     for bounty in bounties where bounty.isActive {
@@ -209,5 +212,12 @@ final class GuildManager: ObservableObject {
             // Ensure we do not reapply delta repeatedly in a loop; lastUpdated is set in processHunts.
             let _ = before
         }
+    }
+
+    // MARK: - Claim Hunt Rewards
+    func claimHuntRewards(for user: User) {
+        guard user.unclaimedHuntGold > 0 else { return }
+        user.gold += user.unclaimedHuntGold
+        user.unclaimedHuntGold = 0
     }
 }
