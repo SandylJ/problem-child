@@ -237,6 +237,10 @@ struct PassiveHuntsSection: View {
                 .disabled(user.unclaimedHuntGold <= 0)
             }
 
+            Text("More mercenaries increase gold gains during hunts.")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+
             // Kill Tally
             if user.huntKillTally.isEmpty {
                 Text("No kills yet. Start a hunt to begin accumulating rewards.")

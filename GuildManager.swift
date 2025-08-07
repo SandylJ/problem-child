@@ -178,6 +178,10 @@ final class GuildManager: ObservableObject {
         }()
 
         for hunt in hunts {
+            // Keep hunt party in sync with current combatants so newly hired mercs matter immediately
+            let currentCombatantIDs = (user.guildMembers ?? []).filter { $0.isCombatant }.map { $0.id }
+            if hunt.memberIDs != currentCombatantIDs { hunt.memberIDs = currentCombatantIDs }
+            
             guard let enemy = hunt.enemy else { continue }
             let dps = totalPartyDPS(memberIDs: hunt.memberIDs, on: user)
             guard dps > 0 else { continue }
@@ -185,7 +189,14 @@ final class GuildManager: ObservableObject {
             let kills = Int(floor(damage / max(1.0, enemy.health)))
             if kills > 0 {
                 hunt.killsAccumulated += kills
-                let goldEarned = Int(Double(enemy.goldPerKill * kills) * goldBoostMultiplier)
+                
+                // Mercenary-based gold multiplier: modest, scales with party size and role diversity, with a soft cap
+                let members = (user.guildMembers ?? []).filter { hunt.memberIDs.contains($0.id) }
+                let partyCount = members.count
+                let uniqueRoles = Set(members.map { $0.role }).count
+                let mercGoldMultiplier = min(1.0 + 0.04 * Double(partyCount) + 0.03 * Double(uniqueRoles), 1.75)
+                
+                let goldEarned = Int(Double(enemy.goldPerKill * kills) * goldBoostMultiplier * mercGoldMultiplier)
                 user.unclaimedHuntGold += goldEarned
                 var tally = user.huntKillTally
                 tally[enemy.id, default: 0] += kills
