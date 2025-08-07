@@ -181,6 +181,7 @@ final class User {
     var team: Team?
     var guildSeals: Int = 0
     var teamPoints: Int = 0
+    @Relationship(deleteRule: .cascade) var eggs: [HatchableEgg]? = []
 
 
     init(username: String) {
@@ -205,6 +206,35 @@ final class User {
     var name: String {
         get { username }
         set { username = newValue }
+    }
+}
+
+@Model
+final class HatchableEgg {
+    @Attribute(.unique) var id: UUID
+    var eggType: String
+    var requiredSteps: Int
+    var currentSteps: Int
+    var hatched: Bool
+    private var rewardsData: Data = Data()
+    var rewards: [LootReward] {
+        get { (try? JSONDecoder().decode([LootReward].self, from: rewardsData)) ?? [] }
+        set { rewardsData = (try? JSONEncoder().encode(newValue)) ?? Data() }
+    }
+    var owner: User?
+
+    init(eggType: String, requiredSteps: Int, owner: User?) {
+        self.id = UUID()
+        self.eggType = eggType
+        self.requiredSteps = requiredSteps
+        self.currentSteps = 0
+        self.hatched = false
+        self.rewards = []
+        self.owner = owner
+    }
+
+    var isReadyToHatch: Bool {
+        currentSteps >= requiredSteps
     }
 }
 
@@ -537,5 +567,48 @@ final class AltarOfWhispers {
 
     var goldGenerationUpgradeCost: Double {
         return pow(50, Double(goldGenerationLevel + 1)) // Use +1 because it starts at 0
+    }
+}
+
+// MARK: - Game Data (Not stored in SwiftData)
+
+struct GameData {
+    static let shared = GameData()
+    let spells: [Spell]
+    let recipes: [Recipe]
+    let expeditions: [Expedition]
+    let treasureChests: [TreasureChest]
+
+    private init() {
+        self.spells = [
+            Spell(id: "spell_double_xp", name: "Enlightenment", description: "Doubles XP gained from the next completed task.", requiredLevel: 5, runeCost: 2, effect: .doubleXP),
+            Spell(id: "spell_double_gold", name: "Midas Touch", description: "Doubles Gold gained from the next completed task.", requiredLevel: 5, runeCost: 2, effect: .doubleGold),
+            Spell(id: "spell_resilience_boost", name: "Iron Will", description: "Boosts Resilience XP gains by 20% for 1 hour.", requiredLevel: 8, runeCost: 5, effect: .xpBoost(.resilience, 1.2)),
+            Spell(id: "spell_gold_boost", name: "Golden Hour", description: "Boosts all Gold gains by 15% for 1 hour.", requiredLevel: 10, runeCost: 8, effect: .goldBoost(1.15)),
+            Spell(id: "spell_rune_boost", name: "Runic Focus", description: "Boosts Rune gains from all sources by 10% for 1 hour.", requiredLevel: 12, runeCost: 10, effect: .runeBoost(1.1)),
+            Spell(id: "spell_surge_of_will", name: "Surge of Will", description: "Instantly generates 100 Willpower.", requiredLevel: 15, runeCost: 15, effect: .willpowerGeneration(100)),
+            Spell(id: "spell_discount", name: "Frugal Mind", description: "Reduces the Gold cost of all Guild Member upgrades by 10% for 1 hour.", requiredLevel: 18, runeCost: 20, effect: .reducedUpgradeCost(0.9)),
+            Spell(id: "spell_guild_xp", name: "Banner of Zeal", description: "Increases Guild XP earned by 25% for 4 hours.", requiredLevel: 20, runeCost: 25, effect: .guildXpBoost(1.25)),
+            Spell(id: "spell_growth_speed", name: "Sun's Blessing", description: "Increases the growth speed of all plants in the Garden by 50% for 8 hours.", requiredLevel: 22, runeCost: 30, effect: .plantGrowthSpeed(1.5))
+        ]
+        self.recipes = [
+            Recipe(id: "recipe_basic_potion", name: "Basic Potion", craftedItemID: "item_basic_potion", requiredMaterials: ["item_herb": 2], requiredGold: 10),
+            Recipe(id: "recipe_strength_potion", name: "Strength Potion", craftedItemID: "item_strength_potion", requiredMaterials: ["item_herb": 3, "item_crystal": 1], requiredGold: 50)
+        ]
+        self.expeditions = [
+            Expedition(id: "exp_forest_1", name: "Whispering Woods", description: "A short trek into the nearby woods.", duration: 3600, minMembers: 1, requiredRoles: nil, lootTable: ["item_herb": 3, "item_wood": 5], xpReward: 100),
+            Expedition(id: "exp_cave_1", name: "Crystal Caves", description: "Explore a cave rumored to hold rare crystals.", duration: 14400, minMembers: 2, requiredRoles: [.forager, .gardener], lootTable: ["item_crystal": 2, "item_stone": 10], xpReward: 500)
+        ]
+        self.treasureChests = [
+            TreasureChest(id: "chest_wooden", name: "Wooden Chest", description: "A simple chest often found by adventurers.", cost: 100, keyItemID: nil, rarity: .common, icon: "chest_wooden_icon", lootTable: [
+                .currency(50), .item(id: "item_herb", quantity: 2), .runes(1)
+            ], rewardCount: 1...2),
+            TreasureChest(id: "chest_iron", name: "Iron Chest", description: "A sturdy chest that requires a key.", cost: 0, keyItemID: "item_iron_key", rarity: .rare, icon: "chest_iron_icon", lootTable: [
+                .currency(200), .item(id: "item_crystal", quantity: 1), .runes(5), .experienceBurst(skill: .other, amount: 100)
+            ], rewardCount: 2...3),
+            TreasureChest(id: "chest_ancient", name: "Ancient Chest", description: "A rare and valuable chest from a forgotten era.", cost: 1000, keyItemID: "item_ancient_key", rarity: .epic, icon: "chest_ancient_icon", lootTable: [
+                .currency(1000), .item(id: "item_relic_fragment", quantity: 1), .runes(20), .echoes(50.0)
+            ], rewardCount: 3...5)
+        ]
     }
 }
