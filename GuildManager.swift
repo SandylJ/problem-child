@@ -83,13 +83,27 @@ final class GuildManager: ObservableObject {
         // In a real game, you'd have a master list of bounty templates
         guard user.guildBounties?.isEmpty ?? true else { return }
 
-        for _ in 0..<3 {
+        // One combat bounty (goblins)
+        let goblinBounty = GuildBounty(
+            title: "Defeat 5 Goblins",
+            bountyDescription: "Slay the pesky goblins infesting the forest.",
+            requiredProgress: 5,
+            guildXpReward: 100,
+            guildSealReward: 10,
+            owner: user,
+            targetEnemyID: "enemy_goblin"
+        )
+        context.insert(goblinBounty)
+        user.guildBounties?.append(goblinBounty)
+
+        // Two non-combat bounties (placeholder reuse of previous style)
+        for _ in 0..<2 {
             let newBounty = GuildBounty(
-                title: "Defeat 5 Goblins",
-                bountyDescription: "Slay the pesky goblins infesting the forest.",
-                requiredProgress: 5,
-                guildXpReward: 100,
-                guildSealReward: 10,
+                title: "Gather Supplies",
+                bountyDescription: "Assist the guild with miscellaneous tasks.",
+                requiredProgress: 3,
+                guildXpReward: 60,
+                guildSealReward: 6,
                 owner: user
             )
             context.insert(newBounty)
@@ -125,5 +139,75 @@ final class GuildManager: ObservableObject {
 
         // This is a placeholder. Actual implementation would be more complex.
         print("Blacksmith enhanced \(equippedItem.name)!")
+    }
+
+    // MARK: - Hunts (Passive Combat)
+
+    func startHunt(enemyID: String, with memberIDs: [UUID], for user: User, context: ModelContext) {
+        guard !memberIDs.isEmpty else { return }
+        let hunt = ActiveHunt(enemyID: enemyID, memberIDs: memberIDs, owner: user)
+        context.insert(hunt)
+        user.activeHunts?.append(hunt)
+    }
+
+    func stopHunt(_ hunt: ActiveHunt, for user: User, context: ModelContext) {
+        if let idx = user.activeHunts?.firstIndex(where: { $0.id == hunt.id }) {
+            let toDelete = user.activeHunts!.remove(at: idx)
+            context.delete(toDelete)
+        }
+    }
+
+    func totalPartyDPS(memberIDs: [UUID], on user: User) -> Double {
+        let members = (user.guildMembers ?? []).filter { memberIDs.contains($0.id) }
+        let baseDPS = members.reduce(0.0) { $0 + $1.combatDPS() }
+        let clericLevels = members.filter { $0.role == .cleric }.reduce(0) { $0 + $1.level }
+        let clericMultiplier = 1.0 + (Double(clericLevels) * 0.10)
+        return baseDPS * clericMultiplier
+    }
+
+    func processHunts(for user: User, deltaTime: TimeInterval, context: ModelContext) {
+        guard let hunts = user.activeHunts, !hunts.isEmpty else { return }
+        let goldBoostMultiplier: Double = {
+            var m = 1.0
+            for (effect, expiry) in user.activeBuffs where Date() < expiry {
+                if case .goldBoost(let multi) = effect { m *= (1.0 + multi) }
+            }
+            return m
+        }()
+
+        for hunt in hunts {
+            guard let enemy = hunt.enemy else { continue }
+            let dps = totalPartyDPS(memberIDs: hunt.memberIDs, on: user)
+            guard dps > 0 else { continue }
+            let damage = dps * deltaTime
+            let kills = Int(floor(damage / max(1.0, enemy.health)))
+            if kills > 0 {
+                hunt.killsAccumulated += kills
+                let goldEarned = Int(Double(enemy.goldPerKill * kills) * goldBoostMultiplier)
+                user.currency += goldEarned
+                // Progress any matching combat bounties
+                if let bounties = user.guildBounties {
+                    for bounty in bounties where bounty.isActive {
+                        if let target = bounty.targetEnemyID, target == enemy.id {
+                            bounty.currentProgress = min(bounty.requiredProgress, bounty.currentProgress + kills)
+                        }
+                    }
+                }
+            }
+            hunt.lastUpdated = Date()
+        }
+    }
+
+    func processOfflineHunts(for user: User, context: ModelContext) {
+        guard let hunts = user.activeHunts, !hunts.isEmpty else { return }
+        let now = Date()
+        for hunt in hunts {
+            let delta = now.timeIntervalSince(hunt.lastUpdated)
+            guard delta > 1 else { continue }
+            let before = hunt.killsAccumulated
+            processHunts(for: user, deltaTime: delta, context: context)
+            // Ensure we do not reapply delta repeatedly in a loop; lastUpdated is set in processHunts.
+            let _ = before
+        }
     }
 }
