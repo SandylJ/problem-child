@@ -13,46 +13,26 @@ struct SanctuaryView: View {
         NavigationView {
             ZStack {
                 if let user = user {
-                    List {
-                        Section(header: Text("Chimera")) {
-                            NavigationLink(destination: LairView()) {
-                                Label("Enter Chimera's Lair", systemImage: "pawprint.fill")
-                            }
-                        }
-                        
-                        Section(header: Text("Reflection")) {
-                            NavigationLink(destination: JournalView(didLevelUp: $didLevelUp, didEvolve: $didEvolve)) {
-                                Label("Write in Journal", systemImage: "book.closed.fill")
-                            }
-                        }
-                        
-                        // Sanctuary Features Section
-                        Section(header: Text("Sanctuary")) {
-                            NavigationLink(destination: GuildMasterView(user: user)) {
-                                Label("Guild Master", systemImage: "person.text.rectangle")
-                            }
-                            NavigationLink(destination: AltarOfWhispersView(user: user)) {
-                                Label("Altar of Whispers", systemImage: "flame.fill")
-                            }
-                            NavigationLink(destination: HabitGardenView(user: user)) {
-                                Label("Habit Garden", systemImage: "leaf.fill")
-                            }
-                            NavigationLink(destination: GuildHallView(user: user)) {
-                                Label("Guild Hall", systemImage: "person.3.fill")
-                            }
+                    ScrollView {
+                        VStack(spacing: 16) {
+                            // Epic hero header
+                            SanctuaryHeroHeader(user: user)
                             
-                            NavigationLink(destination: ObsidianGymnasiumView(user: user)) {
-                                Label("Obsidian Gymnasium", systemImage: "figure.strengthtraining.traditional")
-                            }
-                        }
-                        
-                        if let challenges = user.challenges, !challenges.isEmpty {
-                            Section(header: Text("Weekly Challenges")) {
-                                ForEach(challenges) { challenge in
-                                    ChallengeRowView(challenge: challenge)
+                            // Feature tiles
+                            SanctuaryFeatureGrid(user: user, didLevelUp: $didLevelUp, didEvolve: $didEvolve)
+
+                            if let challenges = user.challenges, !challenges.isEmpty {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Weekly Challenges")
+                                        .font(.title2).bold()
+                                        .padding(.horizontal)
+                                    ForEach(challenges) { challenge in
+                                        ChallengeRowView(challenge: challenge)
+                                    }
                                 }
                             }
                         }
+                        .padding(.vertical)
                     }
                     .navigationTitle("Sanctuary")
                     .onAppear {
@@ -70,6 +50,85 @@ struct SanctuaryView: View {
                 LevelUpOverlay(didLevelUp: $didLevelUp)
             }
         }
+    }
+}
+
+private struct SanctuaryHeroHeader: View {
+    @Bindable var user: User
+    var body: some View {
+        ZStack(alignment: .bottomLeading) {
+            LinearGradient(colors: [.purple.opacity(0.4), .blue.opacity(0.4)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                .frame(maxWidth: .infinity)
+                .frame(height: 180)
+                .cornerRadius(18)
+                .overlay(
+                    ZStack {
+                        Image(systemName: "flame.fill")
+                            .font(.system(size: 80))
+                            .foregroundStyle(.ultraThinMaterial)
+                            .offset(x: 120, y: -30)
+                        Image(systemName: "tree.fill")
+                            .font(.system(size: 80))
+                            .foregroundStyle(.ultraThinMaterial)
+                            .offset(x: -80, y: 10)
+                    }
+                )
+            VStack(alignment: .leading, spacing: 4) {
+                Text("The Sanctuary")
+                    .font(.largeTitle).bold()
+                    .foregroundColor(.white)
+                Text("Heart of your journey. Tend, grow, and ascend.")
+                    .foregroundColor(.white.opacity(0.9))
+                    .font(.callout)
+            }
+            .padding()
+        }
+        .padding(.horizontal)
+    }
+}
+
+private struct SanctuaryFeatureGrid: View {
+    @Environment(\.modelContext) private var modelContext
+    @Bindable var user: User
+    @Binding var didLevelUp: Bool
+    @Binding var didEvolve: Bool
+    var body: some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 160), spacing: 16)], spacing: 16) {
+            NavigationLink(destination: LairView()) { FeatureTile(title: "Chimera's Lair", subtitle: "Evolve your companion", systemImage: "pawprint.fill", color: .teal) }
+            NavigationLink(destination: JournalView(didLevelUp: $didLevelUp, didEvolve: $didEvolve)) { FeatureTile(title: "Journal", subtitle: "Reflect for XP", systemImage: "book.closed.fill", color: .brown) }
+            NavigationLink(destination: GuildMasterView(user: user)) { FeatureTile(title: "Guild Master", subtitle: "Hunts, Bounties, Mercs", systemImage: "person.text.rectangle", color: .indigo) }
+            NavigationLink(destination: AltarOfWhispersView(user: user)) { FeatureTile(title: "Altar of Whispers", subtitle: "Echoes, Runes, Gold", systemImage: "flame.fill", color: .orange) }
+            NavigationLink(destination: HabitGardenView(user: user)) { FeatureTile(title: "Habit Garden", subtitle: "Grow rewards over time", systemImage: "leaf.fill", color: .green) }
+            NavigationLink(destination: GuildHallView(user: user)) { FeatureTile(title: "Guild Hall", subtitle: "Manage your ranks", systemImage: "person.3.fill", color: .blue) }
+            NavigationLink(destination: ObsidianGymnasiumView(user: user)) { FeatureTile(title: "Obsidian Gymnasium", subtitle: "Chisel will into stone", systemImage: "figure.strengthtraining.traditional", color: .purple) }
+        }
+        .padding(.horizontal)
+    }
+}
+
+private struct FeatureTile: View {
+    let title: String
+    let subtitle: String
+    let systemImage: String
+    let color: Color
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Image(systemName: systemImage)
+                .font(.system(size: 28, weight: .semibold))
+                .foregroundColor(.white)
+                .padding(10)
+                .background(color.opacity(0.6))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+            Text(title)
+                .font(.headline)
+            Text(subtitle)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, minHeight: 100, alignment: .leading)
+        .background(Material.regular)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 }
 
@@ -215,7 +274,6 @@ struct ObsidianGymnasiumView: View {
         }
     }
 }
-
 
 // MARK: - Challenge Row View
 struct ChallengeRowView: View {

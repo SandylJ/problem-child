@@ -26,6 +26,12 @@ struct AppTabView: View {
                     Label("Character", systemImage: "person.fill")
                 }
             
+            // Promote Sanctuary to second tab for prominence
+            SanctuaryView()
+                .tabItem {
+                    Label("Sanctuary", systemImage: "tree.fill")
+                }
+            
             if let user = user {
                 NavigationView {
                     SpellbookView(user: user)
@@ -70,11 +76,6 @@ struct AppTabView: View {
             } else {
                 ProgressView().tabItem { Label("Shop", systemImage: "cart.fill") }
             }
-            
-            SanctuaryView()
-                .tabItem {
-                    Label("Sanctuary", systemImage: "tree.fill")
-                }
         }
     }
 }
