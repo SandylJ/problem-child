@@ -109,37 +109,6 @@ final class SpellbookManager {
 }
 
 
-// MARK: - Quest Manager
-
-final class QuestManager {
-    static let shared = QuestManager()
-    private init() {}
-    func initializeQuests(for user: User, context: ModelContext) {
-        guard user.quests?.isEmpty ?? true else { return }
-        for template in ItemDatabase.shared.masterQuestList {
-            let newQuest = Quest(id: template.id, title: template.title, description: template.questDescription, type: template.type, rewards: template.rewards, owner: user)
-            context.insert(newQuest)
-            user.quests?.append(newQuest)
-        }
-    }
-    func updateQuestProgress(forCompletedTask task: TaskItem, on user: User) {
-        guard let activeQuests = user.quests?.filter({ $0.status == .active }) else { return }
-        for quest in activeQuests {
-            switch quest.type {
-            case .milestone(let c, let n): if c == task.category { quest.progress += 1 }; if quest.progress >= n { quest.status = .completed }
-            case .streak(let c, let d): if c == task.category { quest.progress += 1 }; if quest.progress >= d { quest.status = .completed }
-            case .exploration(let c): if c.contains(task.category) { quest.progress += 1 }; if quest.progress >= c.count { quest.status = .completed }
-            }
-        }
-    }
-    func claimQuestReward(for quest: Quest, on user: User, context: ModelContext) {
-        for reward in quest.rewards { IdleGameManager.shared.grantLoot(reward, to: user, context: context) }
-        context.delete(quest)
-    }
-    
-}
-
-
 // MARK: - Obsidian Gymnasium Manager
 
 final class ObsidianGymnasiumManager {

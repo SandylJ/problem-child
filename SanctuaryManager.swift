@@ -1,7 +1,7 @@
 import Foundation
 import SwiftData
 
-final class SanctuaryManager {
+final class SanctuaryManager: ObservableObject {
     static let shared = SanctuaryManager()
     private init() {}
 

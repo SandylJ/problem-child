@@ -1,7 +1,7 @@
 import Foundation
 import SwiftData
 
-final class ShopManager {
+final class ShopManager: ObservableObject {
     static let shared = ShopManager()
     private init() {}
 

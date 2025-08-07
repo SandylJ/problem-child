@@ -2,7 +2,7 @@
 import Foundation
 import SwiftData
 
-final class GuildManager {
+final class GuildManager: ObservableObject {
     static let shared = GuildManager()
     private init() {}
 

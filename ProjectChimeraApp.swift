@@ -2,16 +2,16 @@ import SwiftUI
 
 @main
 struct ProjectChimeraApp: App {
-    // CORRECTED: Create a separate @StateObject for each manager.
-    // This ensures each manager's lifecycle is correctly managed by SwiftUI
-    // and resolves the access level issues by initializing them here.
-    @StateObject private var gameManager = IdleGameManager()
+    // Each manager is initialized using its shared singleton instance. This
+    // avoids access level issues from private initializers while still allowing
+    // SwiftUI to manage their lifecycle via `@StateObject`.
+    @StateObject private var gameManager = IdleGameManager.shared
     @StateObject private var healthKitManager = HealthKitManager()
-    @StateObject private var onboardingManager = OnboardingManager()
-    @StateObject private var equipmentManager = EquipmentManager()
-    @StateObject private var sanctuaryManager = SanctuaryManager()
-    @StateObject private var guildManager = GuildManager()
-    @StateObject private var shopManager = ShopManager()
+    @StateObject private var onboardingManager = OnboardingManager.shared
+    @StateObject private var equipmentManager = EquipmentManager.shared
+    @StateObject private var sanctuaryManager = SanctuaryManager.shared
+    @StateObject private var guildManager = GuildManager.shared
+    @StateObject private var shopManager = ShopManager.shared
 
     var body: some Scene {
         WindowGroup {
