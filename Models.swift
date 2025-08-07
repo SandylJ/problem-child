@@ -178,7 +178,7 @@ final class User {
     }
 
     @Relationship(deleteRule: .cascade, inverse: \Guild.owner) var guild: Guild?
-    @Relationship(inverse: \Team.members) var team: Team?
+    var team: Team?
     var guildSeals: Int = 0
     var teamPoints: Int = 0
 
@@ -237,7 +237,7 @@ final class Guild {
 final class Team {
     @Attribute(.unique) var id: UUID
     var name: String
-    @Relationship(deleteRule: .cascade, inverse: \User.team) var members: [User]?
+    @Relationship(deleteRule: .cascade) var members: [User]?
 
     init(name: String, owner: User) {
         self.id = UUID()
