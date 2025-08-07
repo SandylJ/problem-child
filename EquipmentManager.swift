@@ -2,7 +2,7 @@
 import Foundation
 import SwiftData
 
-final class EquipmentManager {
+final class EquipmentManager: ObservableObject {
     static let shared = EquipmentManager()
     private init() {}
 

@@ -178,7 +178,9 @@ final class User {
     }
 
     @Relationship(deleteRule: .cascade, inverse: \Guild.owner) var guild: Guild?
+    @Relationship(inverse: \Team.members) var team: Team?
     var guildSeals: Int = 0
+    var teamPoints: Int = 0
 
 
     init(username: String) {
@@ -193,7 +195,9 @@ final class User {
         self.runes = 5; self.isDoubleXpNextTask = false; self.unlockedSpellIDs = []; self.activeBuffs = [:]
         self.altarOfWhispers = nil
         self.guild = nil
+        self.team = nil
         self.guildSeals = 0
+        self.teamPoints = 0
     }
 
     /// Some legacy code still expects a `name` property on `User`.
@@ -226,6 +230,19 @@ final class Guild {
 
     var xpToNextLevel: Int {
         return level * 1000 // Simple scaling for now
+    }
+}
+
+@Model
+final class Team {
+    @Attribute(.unique) var id: UUID
+    var name: String
+    @Relationship(deleteRule: .cascade, inverse: \User.team) var members: [User]?
+
+    init(name: String, owner: User) {
+        self.id = UUID()
+        self.name = name
+        self.members = [owner]
     }
 }
 
