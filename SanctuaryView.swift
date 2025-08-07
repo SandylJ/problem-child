@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import Models
 
 struct SanctuaryView: View {
     @Environment(\.modelContext) private var modelContext

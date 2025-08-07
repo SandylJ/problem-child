@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import Models
 
 struct MainView: View {
     @StateObject private var onboardingManager = OnboardingManager.shared
