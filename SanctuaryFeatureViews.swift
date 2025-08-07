@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import Models
 
 // MARK: - Main Habit Garden View
 // FIXED: Added 'public' so this view can be accessed from SanctuaryView

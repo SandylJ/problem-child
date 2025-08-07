@@ -1,5 +1,7 @@
 
 import SwiftUI
+import SwiftData
+import Models
 
 struct ActiveBuffsView: View {
     @Bindable var user: User

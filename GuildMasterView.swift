@@ -1,6 +1,7 @@
 
 import SwiftUI
 import SwiftData
+import Models
 
 struct GuildMasterView: View {
     @Environment(\.modelContext) private var modelContext
