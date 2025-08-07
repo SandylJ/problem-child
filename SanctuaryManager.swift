@@ -57,7 +57,7 @@ final class SanctuaryManager: ObservableObject {
         if let reward = reward {
             grantReward(reward, to: user, context: context)
         } else {
-            user.currency += 10 // Fallback
+            user.gold += 10 // Fallback
         }
         
         // Delete the harvested item
@@ -67,7 +67,7 @@ final class SanctuaryManager: ObservableObject {
     private func grantReward(_ reward: Item.HarvestReward, to user: User, context: ModelContext) {
         switch reward {
         case .currency(let amount):
-            user.currency += amount
+            user.gold += amount
         case .item(let id, let quantity):
             if let inventoryItem = user.inventory?.first(where: { $0.itemID == id }) {
                 inventoryItem.quantity += quantity

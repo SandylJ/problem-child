@@ -35,7 +35,7 @@ final class EggManager {
         for reward in egg.rewards {
             switch reward {
             case .currency(let amount):
-                user.currency += amount
+                user.gold += amount
             case .item(let id, let quantity):
                 if let existing = user.inventory?.first(where: { $0.itemID == id }) {
                     existing.quantity += quantity

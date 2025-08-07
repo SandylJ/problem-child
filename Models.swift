@@ -146,6 +146,19 @@ final class User {
     }
     var runes: Int = 5
     var isDoubleXpNextTask: Bool = false
+    // Unified currency alias for clarity throughout the codebase
+    var gold: Int {
+        get { currency }
+        set { currency = newValue }
+    }
+
+    // Passive Hunt Tracking: per-enemy kill tally and unclaimed hunt gold
+    private var huntKillTallyData: Data = Data()
+    var huntKillTally: [String: Int] {
+        get { (try? JSONDecoder().decode([String: Int].self, from: huntKillTallyData)) ?? [:] }
+        set { huntKillTallyData = (try? JSONEncoder().encode(newValue)) ?? Data() }
+    }
+    var unclaimedHuntGold: Int = 0
     private var unlockedSpellIDsData: Data = Data()
     var unlockedSpellIDs: [String] {
         get { (try? JSONDecoder().decode([String].self, from: unlockedSpellIDsData)) ?? [] }
@@ -201,6 +214,8 @@ final class User {
         self.guildSeals = 0
         self.teamPoints = 0
         self.activeHunts = []
+        self.huntKillTally = [:]
+        self.unclaimedHuntGold = 0
     }
 
     /// Some legacy code still expects a `name` property on `User`.
@@ -670,6 +685,8 @@ struct GameData {
         ]
         self.enemies = [
             Enemy(id: "enemy_goblin", name: "Goblin", health: 12.0, goldPerKill: 2),
+            Enemy(id: "enemy_zombie", name: "Zombie", health: 30.0, goldPerKill: 4),
+            Enemy(id: "enemy_spider", name: "Spider", health: 15.0, goldPerKill: 3),
             Enemy(id: "enemy_wolf", name: "Wolf", health: 20.0, goldPerKill: 3)
         ]
     }
