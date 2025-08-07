@@ -54,7 +54,15 @@ enum LootReward: Codable, Hashable, Identifiable {
 }
 
 enum SpellEffect: Codable, Hashable {
-    case doubleXP, doubleGold
+    case doubleXP
+    case doubleGold
+    case xpBoost(ChimeraStat, Double)
+    case goldBoost(Double)
+    case runeBoost(Double)
+    case willpowerGeneration(Int)
+    case reducedUpgradeCost(Double)
+    case guildXpBoost(Double)
+    case plantGrowthSpeed(Double)
 }
 
 struct Spell: Codable, Hashable, Identifiable {
@@ -63,6 +71,7 @@ struct Spell: Codable, Hashable, Identifiable {
 
 struct Recipe: Codable, Hashable, Identifiable {
     var id: String
+    let name: String
     let craftedItemID: String
     let requiredMaterials: [String: Int]
     let requiredGold: Int
@@ -159,6 +168,7 @@ final class User {
     @Relationship(deleteRule: .cascade) var statues: [Statue]? = []
     @Relationship(deleteRule: .cascade) var quests: [Quest]? = []
     @Relationship(deleteRule: .cascade) var guildBounties: [GuildBounty]? = []
+    @Relationship(deleteRule: .cascade) var achievements: [Achievement]? = []
     @Relationship(deleteRule: .cascade, inverse: \AltarOfWhispers.owner) var altarOfWhispers: AltarOfWhispers?
 
     private var equippedItemsData: Data = Data()
@@ -184,6 +194,13 @@ final class User {
         self.altarOfWhispers = nil
         self.guild = nil
         self.guildSeals = 0
+    }
+
+    /// Some legacy code still expects a `name` property on `User`.
+    /// Provide a computed wrapper around `username` for compatibility.
+    var name: String {
+        get { username }
+        set { username = newValue }
     }
 }
 
@@ -233,6 +250,23 @@ final class GuildBounty {
         self.guildXpReward = guildXpReward
         self.guildSealReward = guildSealReward
         self.isActive = true
+        self.owner = owner
+    }
+}
+
+@Model
+final class Achievement {
+    @Attribute(.unique) var id: UUID
+    var title: String
+    var achievementDescription: String
+    var dateEarned: Date
+    var owner: User?
+
+    init(title: String, achievementDescription: String, dateEarned: Date = .now, owner: User?) {
+        self.id = UUID()
+        self.title = title
+        self.achievementDescription = achievementDescription
+        self.dateEarned = dateEarned
         self.owner = owner
     }
 }
@@ -308,6 +342,9 @@ final class Task {
         self.isCompleted = false; self.completionDate = nil; self.difficulty = difficulty; self.associatedStat = associatedStat
     }
 }
+
+// Legacy type alias for older code paths
+typealias UserTask = Task
 
 @Model
 final class SubTask {
