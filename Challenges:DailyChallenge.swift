@@ -20,4 +20,8 @@ public struct DailyChallenge: Identifiable, Codable, Hashable {
     public var progress: Int = 0
 
     public var isDone: Bool { progress >= target }
+
+    enum CodingKeys: String, CodingKey {
+        case kind, target, reward, progress
+    }
 }

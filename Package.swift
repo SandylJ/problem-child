@@ -18,10 +18,14 @@ let package = Package(
             name: "ProjectChimera",
             dependencies: [],
             path: ".",
+            exclude: [
+                "Info.plist"
+            ],
             sources: [
                 "ProjectChimeraApp.swift",
                 "ContentView.swift",
                 "MainView.swift",
+                "MainTabs.swift",
                 "Models.swift",
                 "Managers.swift",
                 "ItemDatabase.swift",
@@ -52,7 +56,17 @@ let package = Package(
                 "Styles.swift",
                 "TaskListView.swift",
                 "ActiveBuffsView.swift",
-                "AltarOfWhispersView.swift"
+                "AltarOfWhispersView.swift",
+                "ChallengeBridge.swift",
+                "Challenges:ChallengeManager.swift",
+                "Challenges:ChallengesView.swift",
+                "Challenges:DailyChallenge.swift",
+                "Items:Affixes.swift",
+                "Items:TemperingForge.swift",
+                "Meta:AscensionManager.swift",
+                "Meta:AscensionView.swift",
+                "Meta:PrestigePerk.swift",
+                "GameState.swift"
             ],
             resources: [
                 .process("Assets.xcassets")

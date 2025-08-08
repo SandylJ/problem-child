@@ -183,7 +183,7 @@ final class DailyFocusManager: ObservableObject {
 
 // MARK: - Challenge Manager
 
-final class ChallengeManager {
+final class ChallengeManager: ObservableObject {
     static let shared = ChallengeManager()
     private init() {}
     private let challengeTemplates: [WeeklyChallenge] = [

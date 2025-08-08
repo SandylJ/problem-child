@@ -3,7 +3,7 @@ import SwiftUI
 struct MainTabs: View {
     @State private var gameState = GameState()
     @StateObject private var ascension = AscensionManager()
-    @StateObject private var challenges = ChallengeManager()
+    @StateObject private var challenges = DailyChallengeManager()
 
     @State private var bridge: ChallengeBridge?
 

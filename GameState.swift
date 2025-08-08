@@ -1,6 +1,6 @@
 import Foundation
 
-struct GameState: Codable, Hashable {
+struct GameState: Codable, Hashable, PrestigeGameState {
     // Meta / Prestige signals
     var totalPowerEarned: Int = 0
 

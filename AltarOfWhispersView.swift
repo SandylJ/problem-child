@@ -2,6 +2,9 @@
 
 import SwiftUI
 import SwiftData
+#if os(iOS)
+import UIKit
+#endif
 
 struct AltarOfWhispersView: View {
     @Environment(\.modelContext) private var modelContext
@@ -159,14 +162,16 @@ struct AltarOfWhispersView: View {
     }
 
     private func triggerHapticFeedback() {
+        #if os(iOS)
         let generator = UIImpactFeedbackGenerator(style: .medium)
         generator.impactOccurred()
+        #endif
     }
 
     private func updateParticles() {
         particles = particles.filter { $0.opacity > 0 }
         let newParticle = Particle(
-            position: CGPoint(x: UIScreen.main.bounds.width / 2, y: 100),
+            position: CGPoint(x: 200, y: 100), // Fixed position instead of UIScreen
             color: [.cyan, .purple, .blue].randomElement()!,
             size: CGFloat.random(in: 5...15)
         )

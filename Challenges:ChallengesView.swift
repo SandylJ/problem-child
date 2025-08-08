@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ChallengesView: View {
-    @ObservedObject var manager: ChallengeManager
+    @ObservedObject var manager: DailyChallengeManager
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {

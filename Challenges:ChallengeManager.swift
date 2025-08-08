@@ -6,7 +6,7 @@ public protocol ChallengeGameHooks: AnyObject {
     var currentSteps: Int { get }
 }
 
-public final class ChallengeManager: ObservableObject {
+public final class DailyChallengeManager: ObservableObject {
     @Published public private(set) var todays: [DailyChallenge] = []
     @Published public private(set) var streak: Int = 0
     @Published public var lastRolled: Date?

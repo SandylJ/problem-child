@@ -15,6 +15,10 @@ public struct GearItem: Identifiable, Codable, Hashable {
     public var rarity: Rarity
     public var name: String
     public var affixes: [AffixRoll]
+
+    enum CodingKeys: String, CodingKey {
+        case slot, rarity, name, affixes
+    }
 }
 
 public enum AffixPool {

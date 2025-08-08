@@ -12,7 +12,7 @@ struct GuildMasterView: View {
     private var guild: Guild? { user.guild }
     private var activeBounties: [GuildBounty] { (user.guildBounties ?? []).filter { $0.isActive } }
 
-    @State private var timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
+    @State private var lastAppearance: Date = Date()
 
     var body: some View {
         ScrollView {
@@ -55,8 +55,10 @@ struct GuildMasterView: View {
             .padding(.vertical)
         }
         .navigationTitle("Guild Master")
-        .onReceive(timer) { _ in
-            GuildManager.shared.processHunts(for: user, deltaTime: 1.0, context: modelContext)
+        .onAppear {
+            let timePassed = Date().timeIntervalSince(lastAppearance)
+            GuildManager.shared.processHunts(for: user, deltaTime: timePassed, context: modelContext)
+            lastAppearance = Date()
         }
     }
 }

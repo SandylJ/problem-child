@@ -252,7 +252,9 @@ struct ObsidianGymnasiumView: View {
             
             HStack {
                 TextField("Enter Reps (e.g., 10)", text: $repsToAdd)
+                    #if os(iOS)
                     .keyboardType(.numberPad)
+                    #endif
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                 
                 Button("Add") {
@@ -320,9 +322,9 @@ struct JournalView: View {
         VStack(spacing: 15) {
             VStack {
                 Text("Today's Prompt").font(.headline).foregroundColor(.secondary)
-                Text(currentPrompt).padding().frame(maxWidth: .infinity).background(Color(.systemGray6)).cornerRadius(10)
+                Text(currentPrompt).padding().frame(maxWidth: .infinity).background(Color.secondary.opacity(0.1)).cornerRadius(10)
             }
-            TextEditor(text: $entryText).padding(5).overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(.systemGray4), lineWidth: 1))
+            TextEditor(text: $entryText).padding(5).overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.secondary.opacity(0.3), lineWidth: 1))
             HStack {
                 Text("My mood:")
                 Picker("Mood", selection: $moodRating) {
@@ -338,7 +340,9 @@ struct JournalView: View {
         }
         .padding()
         .navigationTitle(Date().formatted(date: .abbreviated, time: .omitted))
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .sensoryFeedback(.selection, trigger: journalSavedTrigger)
     }
     
