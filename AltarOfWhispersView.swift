@@ -159,14 +159,13 @@ struct AltarOfWhispersView: View {
     }
 
     private func triggerHapticFeedback() {
-        let generator = UIImpactFeedbackGenerator(style: .medium)
-        generator.impactOccurred()
+        // Haptic feedback removed for cross-platform compatibility
     }
 
     private func updateParticles() {
         particles = particles.filter { $0.opacity > 0 }
         let newParticle = Particle(
-            position: CGPoint(x: UIScreen.main.bounds.width / 2, y: 100),
+            position: CGPoint(x: 200, y: 100), // Fixed position for cross-platform compatibility
             color: [.cyan, .purple, .blue].randomElement()!,
             size: CGFloat.random(in: 5...15)
         )

@@ -46,7 +46,7 @@ struct OnboardingView: View {
         
         // Create the user's first task if a title was provided.
         if !firstTaskTitle.isEmpty {
-            let firstTask = UserTask(
+            let firstTask = Task(
                 title: firstTaskTitle,
                 difficulty: .easy,
                 associatedStat: .intellect
@@ -180,5 +180,5 @@ struct FinishStepView: View {
 
 #Preview {
     OnboardingView()
-        .modelContainer(for: [User.self, UserTask.self], inMemory: true)
+        .modelContainer(for: [User.self, Task.self], inMemory: true)
 }
