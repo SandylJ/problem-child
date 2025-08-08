@@ -130,8 +130,13 @@ struct AppTabView: View {
         // Initialize other managers
         ChallengeManager.shared.generateWeeklyChallenges(for: newUser, context: modelContext)
         SpellbookManager.shared.unlockNewSpells(for: newUser)
-        
-        print("Default user created successfully")
+
+        do {
+            try modelContext.save()
+            print("Default user created successfully")
+        } catch {
+            print("Failed to save default user: \(error)")
+        }
     }
 }
 
