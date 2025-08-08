@@ -19,7 +19,8 @@ let package = Package(
             dependencies: [],
             path: ".",
             exclude: [
-                "Info.plist"
+                "Info.plist",
+                "problem-child"
             ],
             sources: [
                 "ProjectChimeraApp.swift",
@@ -58,14 +59,14 @@ let package = Package(
                 "ActiveBuffsView.swift",
                 "AltarOfWhispersView.swift",
                 "ChallengeBridge.swift",
-                "Challenges:ChallengeManager.swift",
-                "Challenges:ChallengesView.swift",
-                "Challenges:DailyChallenge.swift",
-                "Items:Affixes.swift",
-                "Items:TemperingForge.swift",
-                "Meta:AscensionManager.swift",
-                "Meta:AscensionView.swift",
-                "Meta:PrestigePerk.swift",
+                "Challenges_ChallengeManager.swift",
+                "Challenges_ChallengesView.swift",
+                "Challenges_DailyChallenge.swift",
+                "Items_Affixes.swift",
+                "Items_TemperingForge.swift",
+                "Meta_AscensionManager.swift",
+                "Meta_AscensionView.swift",
+                "Meta_PrestigePerk.swift",
                 "GameState.swift"
             ],
             resources: [

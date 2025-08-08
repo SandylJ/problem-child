@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct MainView: View {
-    @StateObject private var onboardingManager = OnboardingManager.shared
+    @EnvironmentObject var onboardingManager: OnboardingManager
 
     var body: some View {
         Group {
@@ -12,10 +12,21 @@ struct MainView: View {
                 OnboardingView()
             }
         }
+        .onAppear {
+            // If onboarding is completed but no user exists, create one
+            if onboardingManager.hasCompletedOnboarding {
+                // This will be handled in AppTabView.onAppear
+            } else {
+                // Force complete onboarding if there are issues
+                print("Onboarding not completed, forcing completion...")
+                onboardingManager.completeOnboarding()
+            }
+        }
     }
 }
 
 struct AppTabView: View {
+    @Environment(\.modelContext) private var modelContext
     @Query private var users: [User]
     private var user: User? { users.first }
     
@@ -76,7 +87,51 @@ struct AppTabView: View {
             } else {
                 ProgressView().tabItem { Label("Shop", systemImage: "cart.fill") }
             }
+            
+            // --- NEW: Ascension Tab ---
+            NavigationView {
+                AscensionView(ascension: AscensionManager(), state: .constant(GameState()))
+            }
+            .tabItem {
+                Label("Ascend", systemImage: "arrow.uturn.up")
+            }
+            
+            // --- NEW: Challenges Tab ---
+            NavigationView {
+                ChallengesView(manager: DailyChallengeManager())
+            }
+            .tabItem {
+                Label("Challenges", systemImage: "list.bullet.rectangle")
+            }
         }
+        .onAppear {
+            print("AppTabView appeared, users count: \(users.count)")
+            // Ensure a user exists
+            if users.isEmpty {
+                print("No users found, creating default user...")
+                createDefaultUser()
+            } else {
+                print("Found \(users.count) users")
+            }
+        }
+    }
+    
+    private func createDefaultUser() {
+        print("Creating default user...")
+        let newUser = User(username: "PlayerOne")
+        modelContext.insert(newUser)
+        
+        // Initialize guild for the user
+        GuildManager.shared.initializeGuild(for: newUser, context: modelContext)
+        
+        // Generate initial bounties
+        GuildManager.shared.generateDailyBounties(for: newUser, context: modelContext)
+        
+        // Initialize other managers
+        ChallengeManager.shared.generateWeeklyChallenges(for: newUser, context: modelContext)
+        SpellbookManager.shared.unlockNewSpells(for: newUser)
+        
+        print("Default user created successfully")
     }
 }
 

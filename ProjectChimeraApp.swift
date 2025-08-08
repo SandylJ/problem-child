@@ -1,4 +1,3 @@
-#if !SWIFT_PACKAGE
 import SwiftUI
 import SwiftData
 
@@ -52,4 +51,3 @@ struct ProjectChimeraApp: App {
         }
     }
 }
-#endif
