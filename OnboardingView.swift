@@ -53,6 +53,13 @@ struct OnboardingView: View {
             )
             modelContext.insert(firstTask)
         }
+
+        // Ensure data is persisted before leaving onboarding
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to save onboarding data: \(error)")
+        }
     }
 }
 
