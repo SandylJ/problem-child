@@ -2,20 +2,20 @@
 import PackageDescription
 
 let package = Package(
-    name: "ProjectChimera",
+    name: "ProjectChimeraProblemChild",
     platforms: [
         .iOS(.v17),
         .macOS(.v14)
     ],
     products: [
         .library(
-            name: "ProjectChimera",
-            targets: ["ProjectChimera"]),
+            name: "ProjectChimeraProblemChild",
+            targets: ["ProjectChimeraProblemChild"]),
     ],
     dependencies: [],
     targets: [
         .target(
-            name: "ProjectChimera",
+            name: "ProjectChimeraProblemChild",
             dependencies: [],
             path: ".",
             sources: [

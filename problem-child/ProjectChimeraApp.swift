@@ -1,3 +1,4 @@
+#if !SWIFT_PACKAGE
 import SwiftUI
 import SwiftData
 
@@ -44,10 +45,11 @@ struct ProjectChimeraApp: App {
                     PlantedTree.self,
                     GuildMember.self,
                     ActiveExpedition.self,
-                                        AltarOfWhispers.self,
-                     WeeklyChallenge.self,
-                     ActiveHunt.self
+                    AltarOfWhispers.self,
+                    WeeklyChallenge.self,
+                    ActiveHunt.self
                 ])
         }
     }
 }
+#endif

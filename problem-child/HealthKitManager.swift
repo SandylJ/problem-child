@@ -1,3 +1,4 @@
+#if canImport(HealthKit)
 import Foundation
 import HealthKit
 
@@ -189,3 +190,14 @@ class HealthKitManager: ObservableObject {
         healthStore.execute(query)
     }
 }
+#else
+import Foundation
+
+class HealthKitManager: ObservableObject {
+    func requestAuthorization(completion: @escaping (Bool) -> Void) { completion(false) }
+    func fetchSleepData(completion: @escaping (Double?) -> Void) { completion(nil) }
+    func fetchStepCount(completion: @escaping (Double?) -> Void) { completion(nil) }
+    func fetchWorkoutDuration(completion: @escaping (Double?) -> Void) { completion(nil) }
+    func fetchMindfulMinutes(completion: @escaping (Double?) -> Void) { completion(nil) }
+}
+#endif
