@@ -51,7 +51,7 @@ struct CharacterView: View {
                                 .cornerRadius(10).padding()
                         }
                     }
-                    .navigationTitle("Character")
+                    .navigationTitle("Character").navigationBarHidden(true)
                     .onAppear {
                         if dailyTasks.isEmpty { dailyTasks = Self.generateNewDailyTasks() }
                         ChallengeManager.shared.generateWeeklyChallenges(for: user, context: modelContext)
@@ -180,7 +180,7 @@ struct CharacterSkillsHeader: View {
                     skillNavLink(skill: .flow, icon: "wind", xp: user.xpFlow, level: user.levelFlow)
                 }
             }.padding()
-        }.background(Color.gray.opacity(0.1))
+        }.background(Color(.systemGray6))
     }
     private func skillNavLink(skill: SkillCategory, icon: String, xp: Int, level: Int) -> some View {
         NavigationLink(destination: SkillDetailView(skillName: skill.rawValue.capitalized, progress: Double(xp) / 100.0, level: level, completedTasks: completedTasks[skill] ?? [:])) {

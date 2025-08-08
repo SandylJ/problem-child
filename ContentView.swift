@@ -8,10 +8,10 @@ struct ContentView: View {
     @EnvironmentObject var healthKitManager: HealthKitManager
     @EnvironmentObject var onboardingManager: OnboardingManager
 
-    @Query(filter: #Predicate<Task> { task in
+    @Query(filter: #Predicate<UserTask> { task in
         task.difficulty.rawValue == "easy" &&
             task.associatedStat.rawValue == "intellect"
-    }) var tasks: [Task]
+    }) var tasks: [UserTask]
 
     var body: some View {
         Group {
