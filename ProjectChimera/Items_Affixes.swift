@@ -2,6 +2,8 @@ import Foundation
 
 public enum GearSlot: String, Codable, CaseIterable { case ring }
 
+public enum Rarity: String, Codable, CaseIterable { case common, rare, epic, legendary }
+
 public struct AffixRoll: Codable, Hashable {
     public let affix: String
     public var value: Double

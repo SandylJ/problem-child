@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(Vortex)
+import Vortex
+#endif
 
 struct LevelUpOverlay: View {
     @Binding var didLevelUp: Bool
@@ -6,7 +9,29 @@ struct LevelUpOverlay: View {
     var body: some View {
         ZStack {
             if didLevelUp {
-                // Simple level up overlay without iOS-specific features
+                #if canImport(Vortex)
+                VortexViewReader { proxy in
+                    VortexView(.confetti) {
+                        Rectangle()
+                            .fill(.white)
+                            .frame(width: 16, height: 16)
+                            .tag("square")
+                        
+                        Circle()
+                            .fill(.white)
+                            .frame(width: 16)
+                            .tag("circle")
+                    }
+                    .onAppear {
+                        proxy.burst()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                            didLevelUp = false
+                        }
+                    }
+                }
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+                #else
                 Text("Level Up!")
                     .font(.largeTitle.bold())
                     .padding(24)
@@ -16,6 +41,7 @@ struct LevelUpOverlay: View {
                             didLevelUp = false
                         }
                     }
+                #endif
             }
         }
     }
