@@ -37,10 +37,14 @@ struct SanctuaryView: View {
                     .navigationTitle("Sanctuary")
                     .onAppear {
                         // Initialize systems for the user if they haven't been already.
+                        IdleGameManager.shared.initializeAltar(for: user, context: modelContext)
                         ObsidianGymnasiumManager.shared.initializeStatues(for: user, context: modelContext)
                         QuestManager.shared.initializeQuests(for: user, context: modelContext)
                         GuildManager.shared.initializeGuild(for: user, context: modelContext)
                         GuildManager.shared.generateDailyBounties(for: user, context: modelContext)
+                        ChallengeManager.shared.generateWeeklyChallenges(for: user, context: modelContext)
+                        SpellbookManager.shared.unlockNewSpells(for: user)
+                        // Preserve existing offline processing
                         IdleGameManager.shared.processOfflineHunts(for: user, context: modelContext)
                     }
                 } else {

@@ -43,6 +43,24 @@ struct OnboardingView: View {
             chimera.name = self.chimeraName.isEmpty ? "Chimera" : self.chimeraName
         }
         modelContext.insert(newUser)
+
+        // Seed starter items for a smooth onboarding experience
+        let starterItems: [(String, Int)] = [
+            ("seed_vigor", 2),
+            ("crop_sunwheat", 2)
+        ]
+        for (itemID, qty) in starterItems {
+            let invItem = InventoryItem(itemID: itemID, quantity: qty, owner: newUser)
+            newUser.inventory?.append(invItem)
+        }
+
+        // Initialize core sanctuary systems
+        IdleGameManager.shared.initializeAltar(for: newUser, context: modelContext)
+        GuildManager.shared.initializeGuild(for: newUser, context: modelContext)
+        ObsidianGymnasiumManager.shared.initializeStatues(for: newUser, context: modelContext)
+        QuestManager.shared.initializeQuests(for: newUser, context: modelContext)
+        ChallengeManager.shared.generateWeeklyChallenges(for: newUser, context: modelContext)
+        SpellbookManager.shared.unlockNewSpells(for: newUser)
         
         // Create the user's first task if a title was provided.
         if !firstTaskTitle.isEmpty {
