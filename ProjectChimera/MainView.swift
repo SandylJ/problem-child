@@ -13,14 +13,7 @@ struct MainView: View {
             }
         }
         .onAppear {
-            // If onboarding is completed but no user exists, create one
-            if onboardingManager.hasCompletedOnboarding {
-                // This will be handled in AppTabView.onAppear
-            } else {
-                // Force complete onboarding if there are issues
-                print("Onboarding not completed, forcing completion...")
-                onboardingManager.completeOnboarding()
-            }
+            // No-op: let user complete onboarding naturally
         }
     }
 }
@@ -35,7 +28,7 @@ struct AppTabView: View {
         TabView {
             // Main Game Tabs
             NavigationView {
-                TaskListView(user: User(username: "Player"), didLevelUp: .constant(false), didEvolve: .constant(false))
+                RootUserTaskList()
             }
             .tabItem {
                 Label("Tasks", systemImage: "checklist")
@@ -95,6 +88,22 @@ struct AppTabView: View {
                     Image(systemName: "ellipsis.circle")
                 }
             }
+        }
+    }
+}
+
+struct RootUserTaskList: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query private var users: [User]
+
+    var body: some View {
+        if let user = users.first {
+            TaskListView(user: user, didLevelUp: .constant(false), didEvolve: .constant(false))
+        } else {
+            // Create a default user synchronously on first load
+            let newUser = User(username: "PlayerOne")
+            modelContext.insert(newUser)
+            TaskListView(user: newUser, didLevelUp: .constant(false), didEvolve: .constant(false))
         }
     }
 }

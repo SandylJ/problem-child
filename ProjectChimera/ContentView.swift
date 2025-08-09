@@ -7,6 +7,7 @@ struct ContentView: View {
     @EnvironmentObject var gameManager: IdleGameManager
     @EnvironmentObject var healthKitManager: HealthKitManager
     @EnvironmentObject var onboardingManager: OnboardingManager
+    @Environment(\.modelContext) private var modelContext
 
     var body: some View {
         Group {
@@ -20,6 +21,16 @@ struct ContentView: View {
         .onAppear {
             // HealthKit authorization requires a completion handler.
             healthKitManager.requestAuthorization { _ in }
+            ensureUserExists()
+        }
+    }
+
+    private func ensureUserExists() {
+        // Ensure there is a persisted user so views relying on @Query(User) don't get stuck loading
+        let descriptor = FetchDescriptor<User>()
+        if let users = try? modelContext.fetch(descriptor), users.isEmpty {
+            let defaultUser = User(username: "PlayerOne")
+            modelContext.insert(defaultUser)
         }
     }
 }
