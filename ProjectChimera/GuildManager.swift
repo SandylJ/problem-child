@@ -15,9 +15,8 @@ final class GuildManager: ObservableObject {
 
     @discardableResult
     func hireGuildMember(role: GuildMember.Role, for user: User, context: ModelContext) -> Bool {
-        let hireCost = 250
+        let hireCost = getHireCost(for: role, user: user)
         guard user.gold >= hireCost else { return false }
-        
         user.gold -= hireCost
         let newMember = GuildMember(name: "New \(role.rawValue)", role: role, owner: user)
         user.guildMembers?.append(newMember)
@@ -25,13 +24,116 @@ final class GuildManager: ObservableObject {
     }
     
     func upgradeGuildMember(member: GuildMember, user: User, context: ModelContext) {
-        let cost = member.upgradeCost()
+        let cost = getUpgradeCost(for: member, user: user)
         guard user.gold >= cost else { return }
         
         user.gold -= cost
         member.level += 1
     }
     
+    // MARK: - Bulk Hire
+    private func costMultiplier(for user: User) -> Double {
+        var discount: Double = 0.0
+        for (effect, expiry) in user.activeBuffs {
+            if Date() < expiry {
+                if case .reducedUpgradeCost(let percent) = effect {
+                    if percent <= 0.0 {
+                        continue
+                    } else if percent <= 0.5 {
+                        // Treat as direct percent off, e.g., 0.05 = 5%
+                        discount += percent
+                    } else if percent < 1.0 {
+                        // Treat as multiplier, e.g., 0.9 => 10% off
+                        discount += (1.0 - percent)
+                    }
+                }
+            }
+        }
+        discount = min(max(discount, 0.0), 0.95)
+        return 1.0 - discount
+    }
+    
+    func getBulkHireCost(for role: GuildMember.Role, user: User, count: Int) -> Int {
+        guard count > 0 else { return 0 }
+        let baseCost = 250.0
+        let r = 1.5
+        let existingCount = Double((user.guildMembers ?? []).filter { $0.role == role }.count)
+        let startTerm = pow(r, existingCount)
+        // Sum of geometric series: base * r^k * (r^n - 1)/(r - 1)
+        let total = baseCost * startTerm * (pow(r, Double(count)) - 1.0) / (r - 1.0)
+        let discounted = total * costMultiplier(for: user)
+        return Int(discounted.rounded())
+    }
+    
+    @discardableResult
+    func bulkHire(role: GuildMember.Role, for user: User, count desiredCount: Int, context: ModelContext) -> (hired: Int, spent: Int) {
+        guard desiredCount > 0 else { return (0, 0) }
+        var left = 0
+        var right = desiredCount
+        var best = 0
+        while left <= right {
+            let mid = (left + right) / 2
+            let cost = getBulkHireCost(for: role, user: user, count: mid)
+            if cost <= user.gold { best = mid; left = mid + 1 } else { right = mid - 1 }
+        }
+        let toHire = best
+        let spend = getBulkHireCost(for: role, user: user, count: toHire)
+        guard toHire > 0 && spend <= user.gold else { return (0, 0) }
+        user.gold -= spend
+        for _ in 0..<toHire {
+            let newMember = GuildMember(name: "New \(role.rawValue)", role: role, owner: user)
+            user.guildMembers?.append(newMember)
+        }
+        return (toHire, spend)
+    }
+    
+    // MARK: - Bulk Upgrade
+    func getUpgradeCost(for member: GuildMember) -> Int {
+        let baseCost = 100.0
+        let levelScaling = pow(2.0, Double(member.level - 1))
+        let roleMultiplier = getRoleUpgradeMultiplier(for: member.role)
+        return Int((baseCost * levelScaling * roleMultiplier).rounded())
+    }
+    func getUpgradeCost(for member: GuildMember, user: User) -> Int {
+        let raw = Double(getUpgradeCost(for: member))
+        let discounted = raw * costMultiplier(for: user)
+        return Int(discounted.rounded())
+    }
+    
+    func getBulkUpgradeCost(for member: GuildMember, levels: Int) -> Int {
+        guard levels > 0 else { return 0 }
+        let baseCost = 100.0
+        let roleMultiplier = getRoleUpgradeMultiplier(for: member.role)
+        // Sum base*roleMult*2^{level-1} * (2^{levels}-1)
+        let start = pow(2.0, Double(member.level - 1))
+        let total = baseCost * roleMultiplier * start * (pow(2.0, Double(levels)) - 1.0)
+        return Int(total.rounded())
+    }
+    func getBulkUpgradeCost(for member: GuildMember, levels: Int, user: User) -> Int {
+        let raw = Double(getBulkUpgradeCost(for: member, levels: levels))
+        let discounted = raw * costMultiplier(for: user)
+        return Int(discounted.rounded())
+    }
+    
+    @discardableResult
+    func bulkUpgrade(member: GuildMember, user: User, levels desiredLevels: Int) -> (upgraded: Int, spent: Int) {
+        guard desiredLevels > 0 else { return (0, 0) }
+        var left = 0
+        var right = desiredLevels
+        var best = 0
+        while left <= right {
+            let mid = (left + right) / 2
+            let cost = getBulkUpgradeCost(for: member, levels: mid, user: user)
+            if cost <= user.gold { best = mid; left = mid + 1 } else { right = mid - 1 }
+        }
+        let toUpgrade = best
+        let spend = getBulkUpgradeCost(for: member, levels: toUpgrade, user: user)
+        guard toUpgrade > 0 && spend <= user.gold else { return (0, 0) }
+        user.gold -= spend
+        member.level += toUpgrade
+        return (toUpgrade, spend)
+    }
+
     // MARK: - Expedition Management
     
     func launchExpedition(expeditionID: String, with memberIDs: [UUID], for user: User, context: ModelContext) {
@@ -268,14 +370,9 @@ final class GuildManager: ObservableObject {
         let baseCost = 250
         let existingCount = (user.guildMembers ?? []).filter { $0.role == role }.count
         let scalingMultiplier = pow(1.5, Double(existingCount))
-        return Int(Double(baseCost) * scalingMultiplier)
-    }
-    
-    func getUpgradeCost(for member: GuildMember) -> Int {
-        let baseCost = 100
-        let levelScaling = pow(2.0, Double(member.level - 1))
-        let roleMultiplier = getRoleUpgradeMultiplier(for: member.role)
-        return Int(Double(baseCost) * levelScaling * roleMultiplier)
+        let raw = Double(baseCost) * scalingMultiplier
+        let discounted = raw * costMultiplier(for: user)
+        return Int(discounted.rounded())
     }
     
     private func getRoleUpgradeMultiplier(for role: GuildMember.Role) -> Double {
@@ -285,6 +382,8 @@ final class GuildManager: ObservableObject {
         case .wizard: return 1.5
         case .rogue: return 1.3
         case .cleric: return 1.4
+        case .druid: return 1.35
+        case .warlock: return 1.45
         default: return 1.0
         }
     }

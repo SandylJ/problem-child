@@ -303,11 +303,10 @@ struct GuildMemberRowView: View {
             if member.isOnExpedition {
                 Text("On Expedition").font(.caption).foregroundColor(.blue).bold()
             } else {
-                Button("Upgrade (\(member.upgradeCost()) G)") {
-                    GuildManager.shared.upgradeGuildMember(member: member, user: user, context: modelContext)
-                }
+                let cost = GuildManager.shared.getUpgradeCost(for: member, user: user)
+                Button("Upgrade (\(cost) G)") { GuildManager.shared.upgradeGuildMember(member: member, user: user, context: modelContext) }
                 .buttonStyle(.bordered).tint(.blue)
-                .disabled(user.gold < member.upgradeCost())
+                .disabled(user.gold < cost)
             }
         }
         .padding().background(Material.regular).cornerRadius(15).padding(.horizontal)
@@ -318,10 +317,16 @@ struct HireableMemberCardView: View {
     @Environment(\.modelContext) private var modelContext
     let role: GuildMember.Role
     @Bindable var user: User
+    @State private var quantityOptions: [Int] = [1, 5, 10]
+    @State private var selectedQuantityIndex: Int = 0
     
     var body: some View {
-        let cost = 250
         let tempMember = GuildMember(name: "", role: role, owner: nil)
+        let singleCost = GuildManager.shared.getHireCost(for: role, user: user)
+        let desiredCount = quantityOptions[safe: selectedQuantityIndex] ?? 1
+        let bulkCost = GuildManager.shared.getBulkHireCost(for: role, user: user, count: desiredCount)
+        let canAffordAny = user.gold >= singleCost
+        let canAffordBulk = user.gold >= bulkCost
         
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -331,12 +336,27 @@ struct HireableMemberCardView: View {
             }
             Text(tempMember.roleDescription).font(.caption).italic().foregroundColor(.secondary)
             
-            Button("Hire (\(cost) G)") {
-                _ = GuildManager.shared.hireGuildMember(role: role, for: user, context: modelContext)
-                // Haptic feedback removed for macOS compatibility
+            HStack(spacing: 12) {
+                Picker("Qty", selection: $selectedQuantityIndex) {
+                    ForEach(0..<quantityOptions.count, id: \.self) { idx in
+                        Text("x\(quantityOptions[idx])").tag(idx)
+                    }
+                }
+                .pickerStyle(.segmented)
+                
+                Spacer()
+                
+                Button(canAffordBulk ? "Hire x\(desiredCount) (\(bulkCost) G)" : "Hire (\(singleCost) G)") {
+                    if desiredCount > 1 {
+                        _ = GuildManager.shared.bulkHire(role: role, for: user, count: desiredCount, context: modelContext)
+                    } else {
+                        _ = GuildManager.shared.hireGuildMember(role: role, for: user, context: modelContext)
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.green)
+                .disabled(!canAffordAny)
             }
-            .buttonStyle(.borderedProminent).tint(.green)
-            .disabled(user.gold < cost)
         }
         .padding().background(Material.regular).cornerRadius(15).padding(.horizontal)
     }
@@ -386,5 +406,12 @@ struct ActiveExpeditionCardView: View {
         formatter.allowedUnits = [.hour, .minute, .second]
         formatter.unitsStyle = .abbreviated
         return formatter.string(from: remaining) ?? "..."
+    }
+}
+
+extension Array {
+    subscript(safe index: Int) -> Element? {
+        guard index >= 0 && index < count else { return nil }
+        return self[index]
     }
 }
