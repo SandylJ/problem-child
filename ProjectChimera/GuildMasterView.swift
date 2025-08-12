@@ -1,6 +1,13 @@
 import SwiftUI
 import SwiftData
 
+extension Array {
+    subscript(safe index: Int) -> Element? {
+        guard index >= 0 && index < count else { return nil }
+        return self[index]
+    }
+}
+
 struct GuildMasterView: View {
     @Environment(\.modelContext) private var modelContext
     @Bindable var user: User
@@ -843,7 +850,13 @@ struct HunterRow: View {
         case .wizard: return "sparkles"
         case .rogue: return "bolt.fill"
         case .cleric: return "cross.fill"
-        default: return "person.fill"
+        case .druid: return "leaf.circle.fill"
+        case .warlock: return "moon.stars.fill"
+        case .forager: return "leaf.fill"
+        case .gardener: return "tree.fill"
+        case .alchemist: return "flask.fill"
+        case .seer: return "eye.fill"
+        case .blacksmith: return "hammer.fill"
         }
     }
     
@@ -854,7 +867,11 @@ struct HunterRow: View {
         case .wizard: return .purple
         case .rogue: return .orange
         case .cleric: return .green
-        default: return .secondary
+        case .druid: return .green
+        case .warlock: return .indigo
+        case .forager, .gardener: return .green
+        case .alchemist, .seer: return .purple
+        case .blacksmith: return .orange
         }
     }
     
@@ -934,9 +951,13 @@ struct HunterUpgradeCard: View {
     let user: User
     let modelContext: ModelContext
     @State private var isUpgrading = false
+    @State private var levelOptions: [Int] = [1, 5, 10]
+    @State private var selectedLevelIndex: Int = 0
     
     private var upgradeCost: Int {
-        return member.upgradeCost()
+        let levels = levelOptions[safe: selectedLevelIndex] ?? 1
+        if levels == 1 { return GuildManager.shared.getUpgradeCost(for: member, user: user) }
+        return GuildManager.shared.getBulkUpgradeCost(for: member, levels: levels, user: user)
     }
     
     private var canAfford: Bool {
@@ -950,7 +971,13 @@ struct HunterUpgradeCard: View {
         case .wizard: return "sparkles"
         case .rogue: return "bolt.fill"
         case .cleric: return "cross.fill"
-        default: return "person.fill"
+        case .druid: return "leaf.circle.fill"
+        case .warlock: return "moon.stars.fill"
+        case .forager: return "leaf.fill"
+        case .gardener: return "tree.fill"
+        case .alchemist: return "flask.fill"
+        case .seer: return "eye.fill"
+        case .blacksmith: return "hammer.fill"
         }
     }
     
@@ -961,7 +988,11 @@ struct HunterUpgradeCard: View {
         case .wizard: return .purple
         case .rogue: return .orange
         case .cleric: return .green
-        default: return .secondary
+        case .druid: return .green
+        case .warlock: return .indigo
+        case .forager, .gardener: return .green
+        case .alchemist, .seer: return .purple
+        case .blacksmith: return .orange
         }
     }
     
@@ -995,6 +1026,13 @@ struct HunterUpgradeCard: View {
             }
             
             HStack {
+                Picker("Lv", selection: $selectedLevelIndex) {
+                    ForEach(0..<levelOptions.count, id: \.self) { idx in
+                        Text("+\(levelOptions[idx])").tag(idx)
+                    }
+                }
+                .pickerStyle(.segmented)
+                
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Upgrade Cost")
                         .font(.caption)
@@ -1037,11 +1075,15 @@ struct HunterUpgradeCard: View {
         
         // Animate the upgrade process
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            // Deduct gold
-            user.gold -= upgradeCost
-            
-            // Upgrade the member
-            member.level += 1
+            let levels = levelOptions[safe: selectedLevelIndex] ?? 1
+            if levels == 1 {
+                let cost = GuildManager.shared.getUpgradeCost(for: member, user: user)
+                guard user.gold >= cost else { isUpgrading = false; return }
+                user.gold -= cost
+                member.level += 1
+            } else {
+                _ = GuildManager.shared.bulkUpgrade(member: member, user: user, levels: levels)
+            }
             
             // Success feedback
             let successFeedback = UINotificationFeedbackGenerator()
@@ -1103,35 +1145,53 @@ struct HireMemberCard: View {
     
     @State private var showingHireAlert = false
     @State private var hireMessage = ""
+    @State private var quantityOptions: [Int] = [1, 5, 10]
+    @State private var selectedQuantityIndex: Int = 0
     
     var body: some View {
-        Button {
-            let success = GuildManager.shared.hireGuildMember(role: role, for: user, context: modelContext)
-            hireMessage = success ? "Hired a \(role.rawValue)!" : "Not enough gold (250 required)"
-            showingHireAlert = true
+        let singleCost = GuildManager.shared.getHireCost(for: role, user: user)
+        let desiredCount = quantityOptions[safe: selectedQuantityIndex] ?? 1
+        let bulkCost = GuildManager.shared.getBulkHireCost(for: role, user: user, count: desiredCount)
+        VStack(spacing: 8) {
+            Image(systemName: iconName(for: role))
+                .font(.title2)
+                .foregroundColor(.blue)
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                showingHireAlert = false
+            Text(role.rawValue)
+                .font(.subheadline.bold())
+            
+            Picker("Qty", selection: $selectedQuantityIndex) {
+                ForEach(0..<quantityOptions.count, id: \.self) { idx in
+                    Text("x\(quantityOptions[idx])").tag(idx)
+                }
             }
-        } label: {
-            VStack(spacing: 8) {
-                Image(systemName: iconName(for: role))
-                    .font(.title2)
-                    .foregroundColor(.blue)
-                
-                Text(role.rawValue)
-                    .font(.subheadline.bold())
-                
-                Text("250 Gold")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+            .pickerStyle(.segmented)
+            
+            Text(desiredCount > 1 ? "\(bulkCost) Gold" : "\(singleCost) Gold")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
+            Button(desiredCount > 1 ? "Hire x\(desiredCount)" : "Hire") {
+                if desiredCount > 1 {
+                    let result = GuildManager.shared.bulkHire(role: role, for: user, count: desiredCount, context: modelContext)
+                    hireMessage = result.hired > 0 ? "Hired x\(result.hired) \(role.rawValue)\(result.hired > 1 ? "s" : "")!" : "Not enough gold"
+                } else {
+                    let success = GuildManager.shared.hireGuildMember(role: role, for: user, context: modelContext)
+                    hireMessage = success ? "Hired a \(role.rawValue)!" : "Not enough gold"
+                }
+                showingHireAlert = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                    showingHireAlert = false
+                }
             }
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Material.thin)
-            .cornerRadius(12)
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+            .disabled(user.gold < singleCost)
         }
-        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(Material.thin)
+        .cornerRadius(12)
         .alert("Hire Result", isPresented: $showingHireAlert) {
             Button("OK") { }
         } message: {
@@ -1146,6 +1206,8 @@ struct HireMemberCard: View {
         case .wizard: return "wand.and.stars"
         case .rogue: return "figure.run.circle.fill"
         case .cleric: return "cross.case.fill"
+        case .druid: return "leaf.circle.fill"
+        case .warlock: return "moon.stars.fill"
         case .forager: return "leaf.fill"
         case .gardener: return "tree.fill"
         case .alchemist: return "flask.fill"
@@ -1244,7 +1306,7 @@ struct GuildMemberRow: View {
                 
                 VStack(alignment: .trailing, spacing: 4) {
                     Button("Upgrade") {
-                        let cost = member.upgradeCost()
+                        let cost = GuildManager.shared.getUpgradeCost(for: member, user: user)
                         if user.gold >= cost {
                             GuildManager.shared.upgradeGuildMember(member: member, user: user, context: modelContext)
                             showingUpgradeAlert = true
@@ -1255,7 +1317,7 @@ struct GuildMemberRow: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                     
-                    Text("\(member.upgradeCost()) Gold")
+                    Text("\(GuildManager.shared.getUpgradeCost(for: member, user: user)) Gold")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
@@ -1268,7 +1330,7 @@ struct GuildMemberRow: View {
         .alert("Upgrade Result", isPresented: $showingUpgradeAlert) {
             Button("OK") { }
         } message: {
-            Text(user.gold >= member.upgradeCost() ? "Member upgraded!" : "Not enough gold")
+            Text(user.gold >= GuildManager.shared.getUpgradeCost(for: member, user: user) ? "Member upgraded!" : "Not enough gold")
         }
         .sheet(isPresented: $showingDetails) {
             GuildMemberDetailView(member: member, user: user, modelContext: modelContext)
@@ -1282,11 +1344,11 @@ struct GuildMemberRow: View {
         case .wizard: return .purple
         case .rogue: return .gray
         case .cleric: return .yellow
-        case .forager: return .brown
-        case .gardener: return .green
-        case .alchemist: return .orange
-        case .seer: return .indigo
-        case .blacksmith: return .red
+        case .druid: return .green
+        case .warlock: return .indigo
+        case .forager, .gardener: return .green
+        case .alchemist, .seer: return .purple
+        case .blacksmith: return .orange
         }
     }
     
@@ -1297,6 +1359,8 @@ struct GuildMemberRow: View {
         case .wizard: return "wand.and.stars"
         case .rogue: return "figure.run.circle.fill"
         case .cleric: return "cross.case.fill"
+        case .druid: return "leaf.circle.fill"
+        case .warlock: return "moon.stars.fill"
         case .forager: return "leaf.fill"
         case .gardener: return "tree.fill"
         case .alchemist: return "flask.fill"
@@ -1348,7 +1412,7 @@ struct GuildMemberDetailView: View {
                             StatRow(title: "Combat DPS", value: "\(Int(member.combatDPS()))", icon: "sword", color: .red)
                         }
                         
-                        StatRow(title: "Upgrade Cost", value: "\(member.upgradeCost()) Gold", icon: "dollarsign.circle", color: .green)
+                        StatRow(title: "Upgrade Cost", value: "\(GuildManager.shared.getUpgradeCost(for: member, user: user)) Gold", icon: "dollarsign.circle", color: .green)
                     }
                     .padding()
                     .background(Material.regular)
@@ -1382,13 +1446,13 @@ struct GuildMemberDetailView: View {
                     
                     // Upgrade Button
                     Button("Upgrade Member") {
-                        let cost = member.upgradeCost()
+                        let cost = GuildManager.shared.getUpgradeCost(for: member, user: user)
                         if user.gold >= cost {
                             GuildManager.shared.upgradeGuildMember(member: member, user: user, context: modelContext)
                         }
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(user.gold < member.upgradeCost())
+                    .disabled(user.gold < GuildManager.shared.getUpgradeCost(for: member, user: user))
                 }
                 .padding()
             }
@@ -1411,11 +1475,11 @@ struct GuildMemberDetailView: View {
         case .wizard: return .purple
         case .rogue: return .gray
         case .cleric: return .yellow
-        case .forager: return .brown
-        case .gardener: return .green
-        case .alchemist: return .orange
-        case .seer: return .indigo
-        case .blacksmith: return .red
+        case .druid: return .green
+        case .warlock: return .indigo
+        case .forager, .gardener: return .green
+        case .alchemist, .seer: return .purple
+        case .blacksmith: return .orange
         }
     }
     
@@ -1426,6 +1490,8 @@ struct GuildMemberDetailView: View {
         case .wizard: return "wand.and.stars"
         case .rogue: return "figure.run.circle.fill"
         case .cleric: return "cross.case.fill"
+        case .druid: return "leaf.circle.fill"
+        case .warlock: return "moon.stars.fill"
         case .forager: return "leaf.fill"
         case .gardener: return "tree.fill"
         case .alchemist: return "flask.fill"
@@ -1814,6 +1880,8 @@ struct ActiveExpeditionCard: View {
         case .wizard: return "sparkles"
         case .rogue: return "bolt.fill"
         case .cleric: return "cross.fill"
+        case .druid: return "leaf.circle.fill"
+        case .warlock: return "moon.stars.fill"
         }
     }
     
@@ -1825,6 +1893,8 @@ struct ActiveExpeditionCard: View {
         case .knight, .cleric: return .blue
         case .archer, .rogue: return .gray
         case .wizard: return .indigo
+        case .druid: return .green
+        case .warlock: return .purple
         }
     }
 }
@@ -1982,6 +2052,8 @@ struct AvailableExpeditionCard: View {
         case .knight, .cleric: return .blue
         case .archer, .rogue: return .gray
         case .wizard: return .indigo
+        case .druid: return .green
+        case .warlock: return .purple
         }
     }
 }
@@ -2139,6 +2211,8 @@ struct ExpeditionDetailView: View {
         case .wizard: return "sparkles"
         case .rogue: return "bolt.fill"
         case .cleric: return "cross.fill"
+        case .druid: return "leaf.circle.fill"
+        case .warlock: return "moon.stars.fill"
         }
     }
     
@@ -2150,6 +2224,8 @@ struct ExpeditionDetailView: View {
         case .knight, .cleric: return .blue
         case .archer, .rogue: return .gray
         case .wizard: return .indigo
+        case .druid: return .green
+        case .warlock: return .purple
         }
     }
 }
@@ -2206,6 +2282,8 @@ struct MemberSelectionCard: View {
         case .wizard: return "sparkles"
         case .rogue: return "bolt.fill"
         case .cleric: return "cross.fill"
+        case .druid: return "leaf.circle.fill"
+        case .warlock: return "moon.stars.fill"
         }
     }
     
@@ -2217,6 +2295,8 @@ struct MemberSelectionCard: View {
         case .knight, .cleric: return .blue
         case .archer, .rogue: return .gray
         case .wizard: return .indigo
+        case .druid: return .green
+        case .warlock: return .purple
         }
     }
 }

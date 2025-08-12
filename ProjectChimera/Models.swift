@@ -500,6 +500,7 @@ final class GuildMember {
     enum Role: String, Codable, CaseIterable {
         case forager = "Forager", gardener = "Gardener", alchemist = "Alchemist", seer = "Seer", blacksmith = "Blacksmith"
         case knight = "Knight", archer = "Archer", wizard = "Wizard", rogue = "Rogue", cleric = "Cleric"
+        case druid = "Druid", warlock = "Warlock"
     }
     init(name: String, role: Role, owner: User?) {
         self.id = UUID(); self.name = name; self.role = role; self.level = 1
@@ -517,6 +518,8 @@ final class GuildMember {
         case .wizard: return "Caster that deals bursty magic damage."
         case .rogue: return "Swift strikes with occasional critical bursts."
         case .cleric: return "Support that empowers the party's effectiveness."
+        case .druid: return "Nature mage who heals allies and commands beasts."
+        case .warlock: return "Dark caster dealing sustained shadow damage."
         }
     }
     func effectDescription() -> String {
@@ -531,6 +534,8 @@ final class GuildMember {
         case .wizard: return "Contributes ~\(Int(combatDPS())) DPS to hunts."
         case .rogue: return "Contributes ~\(Int(combatDPS())) DPS to hunts."
         case .cleric: return "Boosts party DPS in hunts by 10% per level."
+        case .druid: return "Contributes ~\(Int(combatDPS())) DPS and minor healing to hunts."
+        case .warlock: return "Contributes ~\(Int(combatDPS())) DPS with damage over time."
         }
     }
     func upgradeCost() -> Int { 100 * Int(pow(2.0, Double(self.level))) }
@@ -542,10 +547,12 @@ final class GuildMember {
         case .wizard: return 1.5 + Double(level) * 1.6
         case .rogue: return 2.2 + Double(level) * 1.3
         case .cleric: return 0.5 + Double(level) * 0.5
+        case .druid: return 1.2 + Double(level) * 1.1
+        case .warlock: return 1.8 + Double(level) * 1.4
         default: return 0.0
         }
     }
-    var isCombatant: Bool { [.knight, .archer, .wizard, .rogue, .cleric].contains(role) }
+    var isCombatant: Bool { [.knight, .archer, .wizard, .rogue, .cleric, .druid, .warlock].contains(role) }
 }
 
 
