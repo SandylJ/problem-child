@@ -26,6 +26,8 @@ struct SkillBadge: View {
             return .mint
         case .other:
             return .gray
+        case .runecrafting:
+            return .cyan
         }
     }
     

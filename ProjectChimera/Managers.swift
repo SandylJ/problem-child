@@ -108,6 +108,50 @@ final class SpellbookManager {
     }
 }
 
+// MARK: - Rune Crafting Manager
+final class RuneCraftingManager {
+    static let shared = RuneCraftingManager()
+    private init() {}
+
+    func hasGlyph(_ id: String, user: User) -> Bool {
+        return (user.inventory?.first(where: { $0.itemID == id })?.quantity ?? 0) > 0
+    }
+
+    func consumeGlyph(_ id: String, user: User, context: ModelContext) -> Bool {
+        guard let inv = user.inventory?.first(where: { $0.itemID == id }) else { return false }
+        inv.quantity -= 1
+        if inv.quantity <= 0 { if let ctx = user.modelContext ?? context as ModelContext? { ctx.delete(inv) } }
+        return true
+    }
+
+    /// Inscribe a glyph to permanently unlock or upgrade associated magic.
+    func inscribeGlyph(_ glyphID: String, for user: User, context: ModelContext) {
+        guard hasGlyph(glyphID, user: user) else { return }
+        guard consumeGlyph(glyphID, user: user, context: context) else { return }
+        switch glyphID {
+        case "glyph_insight":
+            // Unlock Mind Amplification if not present
+            if !user.unlockedSpellIDs.contains("spell_mind_amplification") {
+                user.unlockedSpellIDs.append("spell_mind_amplification")
+            }
+        case "glyph_verdant":
+            if !user.unlockedSpellIDs.contains("spell_verdant_growth") {
+                user.unlockedSpellIDs.append("spell_verdant_growth")
+            }
+        case "glyph_midas":
+            if !user.unlockedSpellIDs.contains("spell_golden_harvest") {
+                user.unlockedSpellIDs.append("spell_golden_harvest")
+            }
+        case "glyph_rune_surge":
+            if !user.unlockedSpellIDs.contains("spell_rune_surge") {
+                user.unlockedSpellIDs.append("spell_rune_surge")
+            }
+        default:
+            break
+        }
+    }
+}
+
 // MARK: - Spell Effect Presentation Helpers
 extension SpellEffect {
     var displayName: String {

@@ -11,6 +11,7 @@ enum SkillName: String, CaseIterable, Codable {
     case flow = "Flow"
     case finance = "Finance"
     case other = "Other"
+    case runecrafting = "Runecrafting"
     
     var displayName: String {
         return rawValue
@@ -26,6 +27,7 @@ enum SkillName: String, CaseIterable, Codable {
         case .flow: return "drop.fill"
         case .finance: return "dollarsign.circle.fill"
         case .other: return "questionmark.circle.fill"
+        case .runecrafting: return "wand.and.stars"
         }
     }
     
@@ -39,6 +41,7 @@ enum SkillName: String, CaseIterable, Codable {
         case .flow: return .cyan
         case .finance: return .yellow
         case .other: return .gray
+        case .runecrafting: return .cyan
         }
     }
 }

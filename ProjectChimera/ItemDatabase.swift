@@ -153,6 +153,35 @@ private extension ItemDatabase {
                 craftedItemID: "item_scroll_fortune",
                 requiredMaterials: ["material_joyful_ember": 5, "material_essence": 2],
                 requiredGold: 250
+            ),
+            // --- Rune Crafting: Glyphs ---
+            Recipe(
+                id: "rune_glyph_insight",
+                name: "Glyph of Insight",
+                craftedItemID: "glyph_insight",
+                requiredMaterials: ["material_essence": 5, "material_dream_shard": 1],
+                requiredGold: 200
+            ),
+            Recipe(
+                id: "rune_glyph_verdant",
+                name: "Glyph of Verdancy",
+                craftedItemID: "glyph_verdant",
+                requiredMaterials: ["material_sunwheat_grain": 10, "material_ironwood_bark": 2],
+                requiredGold: 300
+            ),
+            Recipe(
+                id: "rune_glyph_midas",
+                name: "Glyph of Midas",
+                craftedItemID: "glyph_midas",
+                requiredMaterials: ["material_sunstone_shard": 2, "material_joyful_ember": 10],
+                requiredGold: 500
+            ),
+            Recipe(
+                id: "rune_glyph_surge",
+                name: "Glyph of Resonance",
+                craftedItemID: "glyph_rune_surge",
+                requiredMaterials: ["material_dream_shard": 2, "material_essence": 10],
+                requiredGold: 700
             )
         ]
     }
@@ -304,7 +333,13 @@ private extension ItemDatabase {
             Item(id: "material_dream_shard", name: "Dream Shard", description: "A fragment of a forgotten dream, humming with potential.", itemType: .material, rarity: .rare, icon: "moon.stars.fill", plantableType: nil, consumableEffect: nil, growTime: nil, harvestReward: nil, slot: nil, bonuses: nil),
             Item(id: "material_sunwheat_grain", name: "Sun-Kissed Grain", description: "A warm, golden grain of wheat.", itemType: .material, rarity: .common, icon: "leaf.fill", plantableType: nil, consumableEffect: nil, growTime: nil, harvestReward: nil, slot: nil, bonuses: nil),
             Item(id: "material_glowcap_spore", name: "Glowcap Spore", description: "A faintly glowing mushroom spore.", itemType: .material, rarity: .rare, icon: "circle.grid.3x3.fill", plantableType: nil, consumableEffect: nil, growTime: nil, harvestReward: nil, slot: nil, bonuses: nil),
-            Item(id: "material_ironwood_bark", name: "Ironwood Bark", description: "Remarkably tough bark from the legendary Ironwood tree.", itemType: .material, rarity: .epic, icon: "tree.fill", plantableType: nil, consumableEffect: nil, growTime: nil, harvestReward: nil, slot: nil, bonuses: nil)
+            Item(id: "material_ironwood_bark", name: "Ironwood Bark", description: "Remarkably tough bark from the legendary Ironwood tree.", itemType: .material, rarity: .epic, icon: "tree.fill", plantableType: nil, consumableEffect: nil, growTime: nil, harvestReward: nil, slot: nil, bonuses: nil),
+
+            // --- Rune Glyphs (Special) ---
+            Item(id: "glyph_insight", name: "Glyph of Insight", description: "A delicate sigil that whispers clarity. Inscribe to unlock a mind-amplifying spell.", itemType: .special, rarity: .rare, icon: "eye.trianglebadge.exclamationmark.fill", plantableType: nil, consumableEffect: nil, growTime: nil, harvestReward: nil, slot: nil, bonuses: nil),
+            Item(id: "glyph_verdant", name: "Glyph of Verdancy", description: "A verdant rune etched in living wood. Inscribe to quicken nature's growth.", itemType: .special, rarity: .epic, icon: "leaf.circle.fill", plantableType: nil, consumableEffect: nil, growTime: nil, harvestReward: nil, slot: nil, bonuses: nil),
+            Item(id: "glyph_midas", name: "Glyph of Midas", description: "A radiant signet singing of wealth. Inscribe to beckon golden harvests.", itemType: .special, rarity: .epic, icon: "hexagon.fill", plantableType: nil, consumableEffect: nil, growTime: nil, harvestReward: nil, slot: nil, bonuses: nil),
+            Item(id: "glyph_rune_surge", name: "Glyph of Resonance", description: "A harmonic weave that resonates with the altar. Inscribe to amplify rune flow.", itemType: .special, rarity: .legendary, icon: "circle.hexagonpath.fill", plantableType: nil, consumableEffect: nil, growTime: nil, harvestReward: nil, slot: nil, bonuses: nil)
         ]
     }
 

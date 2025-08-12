@@ -104,6 +104,7 @@ private struct SanctuaryFeatureGrid: View {
             NavigationLink(destination: JournalView(didLevelUp: $didLevelUp, didEvolve: $didEvolve)) { FeatureTile(title: "Journal", subtitle: "Reflect for XP", systemImage: "book.closed.fill", color: .brown) }
             NavigationLink(destination: GuildMasterView(user: user)) { FeatureTile(title: "Guild Master", subtitle: "Hunts, Bounties, Mercs", systemImage: "person.text.rectangle", color: .indigo) }
             NavigationLink(destination: AltarOfWhispersView(user: user)) { FeatureTile(title: "Altar of Whispers", subtitle: "Echoes, Runes, Gold", systemImage: "flame.fill", color: .orange) }
+            NavigationLink(destination: RuneCraftingView(user: user)) { FeatureTile(title: "Rune Atelier", subtitle: "Inscribe glyphs and weave spells", systemImage: "wand.and.stars", color: .cyan) }
             NavigationLink(destination: HabitGardenView(user: user)) { FeatureTile(title: "Habit Garden", subtitle: "Grow rewards over time", systemImage: "leaf.fill", color: .green) }
             NavigationLink(destination: GuildHallView(user: user)) { FeatureTile(title: "Guild Hall", subtitle: "Manage your ranks", systemImage: "person.3.fill", color: .blue) }
             NavigationLink(destination: ObsidianGymnasiumView(user: user)) { FeatureTile(title: "Obsidian Gymnasium", subtitle: "Chisel will into stone", systemImage: "figure.strengthtraining.traditional", color: .purple) }
@@ -183,6 +184,7 @@ private struct SanctuaryFeatureGrid: View {
             NavigationLink(destination: JournalView(didLevelUp: $didLevelUp, didEvolve: $didEvolve)) { FeatureTile(title: "Journal", subtitle: "Reflect for XP", systemImage: "book.closed.fill", color: .brown) }
             NavigationLink(destination: GuildMasterView(user: user)) { FeatureTile(title: "Guild Master", subtitle: "Hunts, Bounties, Mercs", systemImage: "person.text.rectangle", color: .indigo) }
             NavigationLink(destination: AltarOfWhispersView(user: user)) { FeatureTile(title: "Altar of Whispers", subtitle: "Echoes, Runes, Gold", systemImage: "flame.fill", color: .orange) }
+            NavigationLink(destination: RuneCraftingView(user: user)) { FeatureTile(title: "Rune Atelier", subtitle: "Inscribe glyphs and weave spells", systemImage: "wand.and.stars", color: .cyan) }
             NavigationLink(destination: HabitGardenView(user: user)) { FeatureTile(title: "Habit Garden", subtitle: "Grow rewards over time", systemImage: "leaf.fill", color: .green) }
             NavigationLink(destination: GuildHallView(user: user)) { FeatureTile(title: "Guild Hall", subtitle: "Manage your ranks", systemImage: "person.3.fill", color: .blue) }
             NavigationLink(destination: ObsidianGymnasiumView(user: user)) { FeatureTile(title: "Obsidian Gymnasium", subtitle: "Chisel will into stone", systemImage: "figure.strengthtraining.traditional", color: .purple) }
