@@ -32,7 +32,7 @@ final class SkillWebTests: XCTestCase {
         XCTAssertNotNil(skillWebView)
         
         // And: All skill names should be available
-        XCTAssertEqual(SkillName.allCases.count, 8) // strength, mind, joy, vitality, awareness, flow, finance, other
+        XCTAssertEqual(SkillName.allCases.count, 9) // strength, mind, joy, vitality, awareness, flow, finance, other, runecrafting
     }
     
     func testSkillWebDetailView_ShowsCorrectProgress() {
